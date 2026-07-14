@@ -15,7 +15,7 @@ from . import db
 from ..config import Config
 
 DEFAULT_PLANS = {
-    "free":      {"autocite": 5,    "autotag": 10,   "refs": 150},     # deneme
+    "free":      {"autocite": 1,    "autotag": 10,   "refs": 150},     # deneme: 1 makale
     "student":   {"autocite": 25,   "autotag": 100,  "refs": 5000},    # ~$7/ay
     "pro":       {"autocite": 40,   "autotag": 200,  "refs": 50000},   # ~$14.99/ay
     "unlimited": {"autocite": None, "autotag": None, "refs": None},    # owner / kurumsal
