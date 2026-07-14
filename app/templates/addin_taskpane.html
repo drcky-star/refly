@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refly · Word</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<style>
+  body{font-family:-apple-system,"Segoe UI",sans-serif;margin:0;padding:12px;font-size:13px;color:#1c2530}
+  h1{font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+  h1 img{width:24px;height:24px;border-radius:6px}
+  input,select,button{font:inherit}
+  input,select{width:100%;padding:7px 9px;border:1px solid #d8dee6;border-radius:7px;box-sizing:border-box;margin-bottom:8px}
+  button{cursor:pointer;border:1px solid #d8dee6;background:#fff;border-radius:7px;padding:6px 10px}
+  button.primary{background:#6d28d9;color:#fff;border-color:#6d28d9;width:100%;padding:9px;font-weight:600}
+  .item{border:1px solid #eceff3;border-radius:8px;padding:8px;margin-bottom:7px}
+  .item .t{font-weight:600;font-size:12.5px;line-height:1.35}
+  .item .m{color:#6b7785;font-size:11.5px;margin:3px 0 6px}
+  .item button{font-size:12px;padding:4px 9px}
+  .muted{color:#8a97a8}
+  .row{display:flex;gap:6px;align-items:center}
+  #status{margin-top:8px;font-size:12px;min-height:16px}
+  #status.ok{color:#1f9d57}#status.err{color:#c0392b}
+  details{margin-bottom:8px}summary{cursor:pointer;color:#6b7785;font-size:12px}
+  #results{max-height:46vh;overflow:auto;margin-top:6px}
+</style>
+</head>
+<body>
+  <h1><img src="{{ base }}/static/refly-icon-128.png" alt="">Refly</h1>
+
+  <details>
+    <summary>Refly sunucu adresi</summary>
+    <div class="row"><input id="base" placeholder="http://localhost:5006"><button onclick="setBase()">Kaydet</button></div>
+  </details>
+
+  <select id="style" title="Kaynakça stili"></select>
+  <input id="q" placeholder="Kütüphanende ara…" oninput="debounced()">
+  <div id="results"></div>
+
+  <button class="primary" onclick="updateBiblio()">📄 Kaynakçayı oluştur / güncelle</button>
+  <div id="status"></div>
+
+  <script src="{{ base }}/static/addin/taskpane.js"></script>
+</body>
+</html>

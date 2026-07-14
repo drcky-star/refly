@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refly — Reference Manager</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div id="app">
+  <!-- Kenar çubuğu -->
+  <aside class="sidebar">
+    <div class="brand"><img src="{{ url_for('static', filename='refly-icon-128.png') }}" class="logo-img" alt="Refly"> Refly</div>
+    <select id="langSel" class="lang-sel" onchange="setLang(this.value)" title="Language / Dil">
+      <option value="en">🇬🇧 English</option>
+      <option value="tr">🇹🇷 Türkçe</option>
+      <option value="ar">🇸🇦 العربية</option>
+      <option value="fr">🇫🇷 Français</option>
+      <option value="de">🇩🇪 Deutsch</option>
+    </select>
+    <button class="new-coll" onclick="newCollection()" data-i18n="+ Yeni koleksiyon">+ New collection</button>
+    <nav id="collections"></nav>
+    <div id="tagBox" class="tagbox"></div>
+    <div class="side-tools">
+      <button class="dupes" onclick="openDuplicates()" data-i18n="🔁 Kopyaları bul">🔁 Find duplicates</button>
+      <button class="dupes" onclick="enrichAll()" data-i18n="🩹 Kütüphaneyi tamamla">🩹 Complete library</button>
+      <button class="dupes" onclick="autotagAll()" data-i18n="🏷 Otomatik etiketle">🏷 Auto-tag</button>
+      <button class="dupes" onclick="openSynthesize()" data-i18n="🧪 AI derleme">🧪 AI synthesis</button>
+      <button class="dupes" onclick="openAskLibrary()" data-i18n="💬 Kütüphaneye sor">💬 Ask library</button>
+      <button class="dupes" onclick="openAlerts()" data-i18n="🔔 Konu alarmları">🔔 Topic alerts</button>
+      <button class="dupes" onclick="openSharing()" data-i18n="👥 Paylaş / Ekip">👥 Share / Team</button>
+      <button class="dupes" onclick="openBackup()" data-i18n="💾 Yedek">💾 Backup</button>
+      <button class="dupes" onclick="openStats()" data-i18n="📊 Panel">📊 Dashboard</button>
+    </div>
+    <div id="usageBox" class="usage-box"></div>
+    <div class="status">
+      {% if csl_ok %}<span class="ok">●</span> <span data-i18n="CSL stilleri aktif">CSL styles active</span>{% else %}<span class="warn">●</span> <span data-i18n="CSL kapalı (yerleşik stiller)">CSL off (built-in styles)</span>{% endif %}
+      {% if user_csl %}<br><small><span data-i18n="Stil klasörü:">Style folder:</span> {{ user_csl }}</small>{% endif %}
+      <br><a href="/addin/manifest.xml" target="_blank" style="color:#9bb4e8" data-i18n="🔌 Word eklentisi (manifest)">🔌 Word add-in (manifest)</a>
+      {% if auth_on %}<br><small>👤 {{ uname }} · <a href="/logout" style="color:#9bb4e8" data-i18n="Çıkış">Log out</a></small>{% endif %}
+    </div>
+  </aside>
+
+  <!-- Ana alan -->
+  <main class="main">
+    <header class="toolbar">
+      <input id="search" type="search" placeholder="Search library…" data-i18n-ph="Kütüphanede ara…" oninput="debouncedLoad()">
+      <button class="magic" onclick="openAutoCite()" data-i18n="✨ Otomatik referansla">✨ Auto-cite</button>
+      <div class="spacer"></div>
+      <div class="add-menu">
+        <button class="primary" onclick="toggleAdd()" data-i18n="+ Referans ekle ▾">+ Add reference ▾</button>
+        <div id="addDropdown" class="dropdown hidden">
+          <a onclick="openImport('id')" data-i18n="🔗 DOI / PMID ile">🔗 By DOI / PMID</a>
+          <a onclick="openImport('bulk')" data-i18n="📚 Toplu (DOI/PMID listesi)">📚 Bulk (DOI/PMID list)</a>
+          <a onclick="openImport('search')" data-i18n="🔍 PubMed'de ara">🔍 Search PubMed</a>
+          <a onclick="openImport('pdf')" data-i18n="📄 PDF'ten (DOI bul)">📄 From PDF (find DOI)</a>
+          <a onclick="openImport('pdfbulk')" data-i18n="📁 Toplu PDF (klasör)">📁 Bulk PDF (folder)</a>
+          <a onclick="openImport('file')" data-i18n="📥 RIS / BibTeX yükle">📥 Upload RIS / BibTeX</a>
+          <a onclick="openEdit(null)" data-i18n="✍️ Elle gir">✍️ Enter manually</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="format-bar">
+      <label><span data-i18n="Stil:">Style:</span>
+        <select id="style"></select>
+      </label>
+      <button onclick="openStyleSearch()" data-i18n-title="Dergi stili ara" title="Search journal styles">🔎</button>
+      <button onclick="buildBibliography()" data-i18n="📄 Kaynakça oluştur">📄 Build bibliography</button>
+      <div class="export-group">
+        <button onclick="exportAs('docx')">Word</button>
+        <button onclick="exportAs('ris')">RIS</button>
+        <button onclick="exportAs('bibtex')">BibTeX</button>
+        <button onclick="exportAs('endnote')">EndNote</button>
+        <button onclick="exportAs('csl')">CSL</button>
+        <button onclick="exportAs('txt')" data-i18n="Metin">Text</button>
+      </div>
+      <button onclick="openMultiStyle()" data-i18n="🎨 Çok stil">🎨 Multi-style</button>
+      <button onclick="openManuscript()" data-i18n="✍️ Atıf aracı">✍️ Citation tool</button>
+      <button class="magic" onclick="openWriter()" data-i18n="✍️ Yaz &amp; atıfla">✍️ Write &amp; cite</button>
+      <button onclick="checkIntegrity()" data-i18n="🔬 Geri çekilme">🔬 Retractions</button>
+      <button onclick="openAudit()" data-i18n="🕵️ Atıf denetle">🕵️ Verify citations</button>
+      <span id="selInfo" class="sel-info"></span>
+    </div>
+
+    <div id="refList" class="ref-list"></div>
+  </main>
+</div>
+
+<!-- Kaynakça önizleme paneli -->
+<div id="biblioPanel" class="panel hidden">
+  <div class="panel-head">
+    <strong data-i18n="Kaynakça önizleme">Bibliography preview</strong>
+    <span>
+      <button onclick="copyBiblio()" data-i18n="Kopyala">Copy</button>
+      <button onclick="closePanel('biblioPanel')">✕</button>
+    </span>
+  </div>
+  <ol id="biblioList" class="biblio"></ol>
+</div>
+
+<!-- Genel modal -->
+<div id="modalBg" class="modal-bg hidden" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>const CSL_OK = {{ 'true' if csl_ok else 'false' }};</script>
+<script src="{{ url_for('static', filename='i18n.js') }}"></script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

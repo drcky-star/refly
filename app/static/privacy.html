@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy · Refly</title>
+<style>
+  :root{--ink:#1f2430;--muted:#5b6675;--line:#e6e9ef;--brand:#6d28d9;--bg:#f7f8fa}
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);margin:0;line-height:1.62}
+  .wrap{max-width:760px;margin:0 auto;padding:40px 22px 80px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  header img{width:38px;height:38px;border-radius:9px}
+  header b{font-size:20px}
+  h1{font-size:28px;margin:22px 0 4px}
+  .updated{color:var(--muted);font-size:13px;margin-bottom:26px}
+  h2{font-size:18px;margin:30px 0 8px;padding-top:8px;border-top:1px solid var(--line)}
+  p,li{color:#2b3340;font-size:15px}
+  a{color:var(--brand)}
+  ul{padding-left:20px}
+  .note{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--muted)}
+  .top{display:flex;gap:16px;font-size:13px;margin-top:30px}
+  footer{margin-top:40px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="/static/refly-icon-128.png" alt=""><b>Refly</b></header>
+  <h1>Privacy Policy</h1>
+  <div class="updated">Last updated: 9 July 2026</div>
+
+  <p>This Privacy Policy explains what personal data Refly (“Refly”, “we”, “us”) collects,
+  how we use it, and the choices you have. If you have any questions, contact us at
+  <a href="mailto:{{CONTACT}}">{{CONTACT}}</a>.</p>
+
+  <h2>1. Data we collect</h2>
+  <ul>
+    <li><b>Account data</b> — your name, email address, and a securely hashed password. We never store your password in plain text.</li>
+    <li><b>Content you create</b> — references, collections, tags, notes, PDF files you upload, and the manuscript text you paste or upload for automatic citation.</li>
+    <li><b>Usage data</b> — counts of features used (e.g. number of auto-citation runs) to enforce plan limits, plus basic technical logs.</li>
+    <li><b>Payment data</b> — if you subscribe, payment is handled by our payment processor. We receive your plan and billing status, but <b>not</b> your full card number.</li>
+  </ul>
+
+  <h2>2. How we use your data</h2>
+  <ul>
+    <li>To provide the service: store your library, format bibliographies, and run automatic citation.</li>
+    <li>To process manuscript text you submit — detecting claims and verifying that a real source supports each claim.</li>
+    <li>To enforce plan quotas, secure the service, and respond to support requests.</li>
+  </ul>
+
+  <h2>3. Third-party services (subprocessors)</h2>
+  <p>To deliver core features we share the minimum necessary data with:</p>
+  <ul>
+    <li><b>Anthropic (Claude API)</b> — receives the manuscript/claim text you submit for citation detection and verification. Used solely to return results to you.</li>
+    <li><b>NCBI PubMed, CrossRef, iCite</b> — we send bibliographic search queries (article titles, keywords, DOIs). Your account details are not sent.</li>
+    <li><b>Payment processor</b> (e.g. Stripe / iyzico) — processes subscriptions securely; we do not store card data.</li>
+    <li><b>Error monitoring</b> (optional, e.g. Sentry) — technical error reports without your document contents.</li>
+    <li><b>Cloud backup</b> (optional) — encrypted backups stored with the storage provider you configure.</li>
+  </ul>
+  <p class="note">These providers may process data on servers located outside your country
+  (for example, the United States). We rely on their standard data-protection safeguards.</p>
+
+  <h2>4. Data retention</h2>
+  <p>We keep your data while your account is active. You can delete items at any time (soft-deleted
+  first, then removed), and you may request full account deletion by emailing us. Rotating backups
+  are kept for a limited period for disaster recovery.</p>
+
+  <h2>5. Security</h2>
+  <p>Data is encrypted in transit (HTTPS). Passwords are hashed. Each account’s data is isolated so
+  users cannot access one another’s libraries. Administrative operations are restricted.</p>
+
+  <h2>6. Your rights</h2>
+  <p>Depending on your location (e.g. under GDPR, the UAE PDPL, or Türkiye’s KVKK) you may have the
+  right to access, correct, export, or delete your personal data, and to object to certain processing.
+  To exercise these rights, email <a href="mailto:{{CONTACT}}">{{CONTACT}}</a>.</p>
+
+  <h2>7. Cookies</h2>
+  <p>We use a single essential session cookie to keep you logged in. We do not use advertising or
+  cross-site tracking cookies.</p>
+
+  <h2>8. Children</h2>
+  <p>Refly is intended for researchers and professionals and is not directed to children under 16.</p>
+
+  <h2>9. Changes</h2>
+  <p>We may update this policy; material changes will be reflected by the “Last updated” date above.</p>
+
+  <div class="top">
+    <a href="/">← Back to Refly</a>
+    <a href="/terms">Terms of Service</a>
+  </div>
+  <footer>© Refly. Contact: <a href="mailto:{{CONTACT}}">{{CONTACT}}</a></footer>
+</div>
+</body>
+</html>

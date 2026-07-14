@@ -1,0 +1,69 @@
+# Render.com tek-tık deploy yapılandırması (Railway/Fly de benzer)
+# Kurulum: github'a it → render.com → "New Blueprint" → bu repoyu seç.
+services:
+  - type: web
+    name: refly
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn "app:create_app()" --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 180
+    healthCheckPath: /healthz
+    disk:
+      name: refly-data          # SQLite + PDF ekleri + yedekler kalıcı kalsın
+      mountPath: /opt/render/project/src/instance
+      sizeGB: 1
+    envVars:
+      - key: FLASK_SECRET_KEY
+        generateValue: true       # rastgele güçlü anahtar
+      - key: REFLY_AUTH
+        value: "1"                # publish'te çok kullanıcılı + giriş
+      - key: REFLY_PRODUCTION
+        value: "1"                # güvenli çerez + güvenlik başlıkları (HTTPS)
+      - key: REFLY_PUBLIC_URL
+        value: "https://reflyapp.com"   # e-posta/ödeme/eklenti mutlak linkleri bu domaine
+      - key: REFLY_ADMIN_EMAILS
+        sync: false               # yedek/geri-yükleme izinli admin e-postaların + OWNER (unlimited)
+      - key: REFLY_ADMIN_KEY
+        generateValue: true       # kullanıcı planını /api/admin/plan ile değiştirmek için
+      - key: REFLY_BILLING_SECRET
+        generateValue: true       # Stripe/iyzico webhook'u -> /api/billing/webhook
+      - key: REFLY_DEFAULT_PLAN
+        value: "free"
+      # İstersen plan limitlerini ez: REFLY_PLANS='{"free":{"autocite":10,...}}'
+      - key: ANTHROPIC_API_KEY
+        sync: false               # panelden gizli olarak gir
+      - key: NCBI_EMAIL
+        sync: false
+      - key: NCBI_API_KEY
+        sync: false
+      # --- E-posta doğrulama (sahte hesap istismarını önler) ---
+      - key: REFLY_REQUIRE_EMAIL_VERIFICATION
+        value: "1"
+      - key: REFLY_PUBLIC_URL
+        sync: false               # https://<render-adresin>
+      - key: REFLY_CONTACT_EMAIL
+        sync: false
+      - key: REFLY_SMTP_HOST
+        sync: false
+      - key: REFLY_SMTP_PORT
+        value: "587"
+      - key: REFLY_SMTP_USER
+        sync: false
+      - key: REFLY_SMTP_PASS
+        sync: false
+      - key: REFLY_SMTP_FROM
+        sync: false
+      # --- Off-site yedek (S3 uyumlu) — opsiyonel ama şiddetle önerilir ---
+      - key: REFLY_BACKUP_S3_BUCKET
+        sync: false
+      - key: REFLY_BACKUP_S3_ENDPOINT
+        sync: false
+      - key: REFLY_BACKUP_S3_ACCESS_KEY
+        sync: false
+      - key: REFLY_BACKUP_S3_SECRET_KEY
+        sync: false
+      # --- Hata izleme (Sentry) — opsiyonel ---
+      - key: SENTRY_DSN
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12.6"

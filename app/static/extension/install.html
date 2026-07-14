@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refly — Browser extension</title>
+<style>
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: #f4f6fb; color: #0f1b33; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 40px 22px; }
+  h1 { font-size: 30px; letter-spacing: -.02em; }
+  .grad { background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  p { color: #475569; line-height: 1.6; }
+  a.btn { display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; text-decoration: none;
+    padding: 12px 22px; border-radius: 11px; font-weight: 700; box-shadow: 0 6px 20px rgba(99,102,241,.35); }
+  ol { background: #fff; border: 1px solid #e6e9f2; border-radius: 14px; padding: 18px 18px 18px 38px; line-height: 1.9; }
+  code { background: #eef2ff; color: #4f46e5; padding: 1px 6px; border-radius: 5px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>📚 Refly <span class="grad">Save-to-library</span> eklentisi</h1>
+    <p>PubMed, dergi sayfaları ya da Google Scholar'da bir makaledeyken tek tıkla kaynağı Refly kütüphanene ekle.
+       Eklenti sayfadaki DOI/PMID'yi algılar, Refly (oturumunla) kaydı çeker.</p>
+    <p><a class="btn" href="/extension/download">⬇ Eklentiyi indir (.zip)</a></p>
+    <h3>Chrome / Edge'e kurulum</h3>
+    <ol>
+      <li>İndirdiğin <code>refly-extension.zip</code>'i bir klasöre çıkar.</li>
+      <li>Tarayıcıda <code>chrome://extensions</code> (Edge: <code>edge://extensions</code>) aç.</li>
+      <li>Sağ üstten <b>Geliştirici modu</b>'nu aç.</li>
+      <li><b>Paketlenmemiş öğe yükle (Load unpacked)</b> → çıkardığın klasörü seç.</li>
+      <li>Araç çubuğundaki 📚 Refly simgesine tıkla; ilk kullanımda <b>Refly adresini</b> gir (ör. bu sitenin adresi).</li>
+    </ol>
+    <p style="font-size:13px;color:#94a3b8">Not: Çok kullanıcılı sürümde, kaydın doğru hesaba eklenmesi için o tarayıcıda Refly'a giriş yapmış olman gerekir.</p>
+    <p><a href="/" style="color:#6366f1">← Refly'a dön</a></p>
+  </div>
+</body>
+</html>

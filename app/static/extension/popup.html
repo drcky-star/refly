@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  body { width: 300px; margin: 0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; color: #0f1b33; }
+  .hd { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; padding: 12px 14px; font-weight: 800; font-size: 16px; }
+  .bd { padding: 14px; }
+  #found { font-size: 13px; background: #eef2ff; color: #4f46e5; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; word-break: break-all; }
+  #status { font-size: 13px; color: #64748b; }
+  label { font-size: 11px; color: #64748b; display: block; margin: 8px 0 3px; }
+  input { width: 100%; box-sizing: border-box; border: 1px solid #e6e9f2; border-radius: 8px; padding: 7px 9px; font: inherit; }
+  button { width: 100%; margin-top: 12px; border: none; border-radius: 9px; padding: 10px; font-weight: 600; color: #fff;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6); cursor: pointer; font-size: 14px; }
+  button:disabled { opacity: .5; cursor: default; }
+</style>
+</head>
+<body>
+  <div class="hd">📚 Refly</div>
+  <div class="bd">
+    <div id="found" style="display:none"></div>
+    <div id="status">Sayfa taranıyor…</div>
+    <label>Refly adresi</label>
+    <input id="base" placeholder="https://reflyapp.com">
+    <button id="save" disabled>Refly'a kaydet</button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

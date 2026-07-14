@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Refly — Save to library",
+  "version": "1.0",
+  "description": "Bulunduğun makale sayfasındaki kaynağı tek tıkla Refly kütüphanene ekle (PubMed, dergiler, Google Scholar).",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Refly'a kaydet"
+  },
+  "icons": { "128": "icon128.png" }
+}
