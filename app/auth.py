@@ -315,5 +315,8 @@ def init_auth(app):
         if not uid:
             if request.path.startswith("/api/"):
                 return jsonify({"error": "Giriş gerekli"}), 401
+            # Anonim ziyaretçi ana sayfayı (/) açınca login'e atma; index() tanıtım sayfasını gösterir
+            if ep == "refly.index":
+                return
             return redirect(url_for("auth.login"))
         db.set_current_user(uid)

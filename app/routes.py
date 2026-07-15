@@ -31,6 +31,9 @@ COMMON_STYLES = [
 
 @bp.route("/")
 def index():
+    # Anonim ziyaretçi → premium tanıtım (landing) sayfası; giriş yapmış kullanıcı → uygulama
+    if Config.REFLY_AUTH and not session.get("uid"):
+        return send_file(str(Config.BASE_DIR / "app" / "static" / "home.html"))
     return render_template("index.html", csl_ok=csl.available(),
                            user_csl=Config.USER_CSL_DIR or "",
                            auth_on=Config.REFLY_AUTH,
