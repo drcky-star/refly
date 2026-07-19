@@ -103,6 +103,13 @@ def contact_sales():
     return jsonify({"ok": True, "delivered": True})
 
 
+@bp.get("/api/user-count")
+def user_count():
+    """Kayıtlı kullanıcı sayısı (GERÇEK veri: users tablosundaki tüm hesaplar, ücretli/ücretsiz
+    fark etmez). 60 sn önbellekli; yeni kayıt olunca anında güncellenir. Herkese açık."""
+    return jsonify({"count": db.count_users_cached()})
+
+
 @bp.get("/api/me")
 def api_me():
     """Geçerli kullanıcı durumu — arayüz doğrulama/onboarding rozetleri için."""

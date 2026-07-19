@@ -260,6 +260,51 @@ function TransformDemo() {
 }
 
 /* ---------- HERO ---------- */
+/* Live registered-user counter — REAL data from /api/user-count (never hardcoded).
+   Fetches on load, polls every 45s, count-up animation, thousands separators. */
+function UserCount() {
+  const [count, setCount] = useState(null);   // gerçek değer (API'den); yüklenene kadar gizli
+  const [display, setDisplay] = useState(0);  // animasyonlu gösterim
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      try {
+        const r = await fetch("/api/user-count");
+        const d = await r.json();
+        if (alive && typeof d.count === "number") setCount(d.count);
+      } catch (e) { /* ağ hatası — sessiz geç, sonraki poll dener */ }
+    };
+    load();
+    const id = setInterval(load, 45000);       // canlı: 45 sn'de bir güncelle
+    return () => { alive = false; clearInterval(id); };
+  }, []);
+  useEffect(() => {
+    if (count === null) return;
+    let raf, s0 = null; const from = display, to = count, dur = 1000;
+    const step = (t) => {
+      if (s0 === null) s0 = t;
+      const p = Math.min(1, (t - s0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    // Güvence: rAF çalışmasa da (arka plan sekme / reduced-motion) gerçek sayı MUTLAKA gösterilsin.
+    const safety = setTimeout(() => setDisplay(to), dur + 300);
+    return () => { cancelAnimationFrame(raf); clearTimeout(safety); };
+  }, [count]);
+  if (count === null) return null;             // gerçek sayı gelmeden gösterme (0 flaşı olmasın)
+  return (
+    <div className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-full glass text-[13px]">
+      <span className="relative flex h-2 w-2" aria-hidden="true">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+      </span>
+      <span className="text-slate-300"><b className="text-white font-bold tabular-nums">{display.toLocaleString()}</b> {count === 1 ? "researcher" : "researchers"} already referencing with Refly</span>
+    </div>
+  );
+}
+
 function Hero() {
   return (
     <section className="relative pt-32 lg:pt-40 pb-20">
@@ -290,6 +335,7 @@ function Hero() {
             <span className="flex items-center gap-1.5"><Quote size={15} className="text-indigo-400" /> 2,000+ citation styles</span>
             <span className="flex items-center gap-1.5"><GraduationCap size={15} className="text-cyan-400" /> Built for theses & manuscripts</span>
           </motion.div>
+          <motion.div variants={fade} className="mt-6"><UserCount /></motion.div>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 30, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}>
           <TransformDemo />

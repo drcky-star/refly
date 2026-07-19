@@ -444,7 +444,8 @@ def create_user(email: str, password: str, name: str = "", plan: str = "free",
         cur = c.execute(
             "INSERT INTO users (email, name, pw_hash, plan, verified, created_at) VALUES (?,?,?,?,?,?)",
             (email_l, name.strip(), pw_hash, use_plan, is_verified, _now()))
-        return cur.lastrowid
+    _bust_user_count()   # yeni kayıt → sayaç önbelleğini düşür (sayı anında güncellenir)
+    return cur.lastrowid
 
 
 def set_verified(uid: int, value: bool = True):
@@ -515,6 +516,25 @@ def verify_user(email: str, password: str) -> dict | None:
 def count_users() -> int:
     with _conn() as c:
         return c.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+
+
+# Kayıtlı kullanıcı sayacı — 60 sn önbellek (her sayfa yüklemesinde tam sorgu atma).
+# Yeni kayıt olunca create_user() önbelleği düşürür → sayı anında artar.
+_uc_cache = {"n": None, "ts": 0.0}
+_UC_TTL = 60.0
+
+
+def count_users_cached() -> int:
+    import time
+    now = time.monotonic()
+    if _uc_cache["n"] is None or (now - _uc_cache["ts"]) > _UC_TTL:
+        _uc_cache["n"] = count_users()
+        _uc_cache["ts"] = now
+    return _uc_cache["n"]
+
+
+def _bust_user_count():
+    _uc_cache["n"] = None
 
 
 # ---- kayıtlı aramalar / konu alarmları -------------------------------------
