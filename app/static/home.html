@@ -396,7 +396,7 @@ const PRICING = [
   { name: "Free", price: "$0", period: "forever", cta: "Start free", highlight: false, features: ["5 referencing runs / month", "Up to 150 sources", "2,000+ citation styles", "Reference verification"] },
   { name: "Student", price: "$7", period: "/mo", cta: "Get Student", highlight: false, features: ["25 runs / month", "Up to 5,000 sources", "Word add-in + all exports", "Academic email pricing"] },
   { name: "Pro", price: "$14.99", period: "/mo", cta: "Go Pro", highlight: true, features: ["40 runs / month", "Up to 50,000 sources", "Priority speed", "Everything in Student"] },
-  { name: "Enterprise", price: "Custom", period: "", cta: "Contact us", highlight: false, features: ["Unlimited referencing", "Team libraries & SSO", "Dedicated support", "Volume licensing"] },
+  { name: "Enterprise", price: "Custom", period: "", cta: "Contact sales", highlight: false, contact: true, features: ["Unlimited referencing", "Team libraries & SSO", "Dedicated support", "Volume licensing"] },
 ];
 function Pricing() {
   return (
@@ -424,7 +424,9 @@ function Pricing() {
                   </li>
                 ))}
               </ul>
-              <a href={APP_URL} className={"mt-6 h-11 rounded-xl grid place-items-center text-[14px] font-semibold transition " + (p.highlight ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white cta-glow" : "bg-white/[0.06] text-white hover:bg-white/10")}>{p.cta}</a>
+              {p.contact
+                ? <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("refly:contact"))} className={"mt-6 h-11 rounded-xl grid place-items-center text-[14px] font-semibold transition cursor-pointer " + (p.highlight ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white cta-glow" : "bg-white/[0.06] text-white hover:bg-white/10")}>{p.cta}</button>
+                : <a href={APP_URL} className={"mt-6 h-11 rounded-xl grid place-items-center text-[14px] font-semibold transition " + (p.highlight ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white cta-glow" : "bg-white/[0.06] text-white hover:bg-white/10")}>{p.cta}</a>}
             </motion.div>
           ))}
         </motion.div>
@@ -463,12 +465,78 @@ function Footer() {
         <a href={APP_URL} className="flex items-center gap-2.5"><Logo size={26} /><span className="text-white font-bold">Refly</span></a>
         <span className="text-[13px] text-slate-500">AI referencing for academic writing</span>
         <div className="flex-1" />
+        <a href="mailto:support@reflyapp.com" className="text-[13px] text-slate-400 hover:text-white transition">Support</a>
         <a href="/privacy" className="text-[13px] text-slate-400 hover:text-white transition">Privacy</a>
         <a href="/terms" className="text-[13px] text-slate-400 hover:text-white transition">Terms</a>
         <a href={LOGIN_URL} className="text-[13px] text-slate-400 hover:text-white transition">Sign In</a>
         <a href={APP_URL} className="text-[13px] text-slate-400 hover:text-white transition">Open app</a>
       </div>
     </footer>
+  );
+}
+
+/* ---------- CONTACT SALES (Custom / Enterprise inquiry) ---------- */
+const cs_input = "w-full px-3.5 h-11 rounded-xl bg-white/[0.05] border border-white/10 text-white placeholder-slate-500 text-[14px] focus:outline-none focus:border-indigo-400/60";
+function ContactSales() {
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState("idle");   // idle | sending | done
+  const [form, setForm] = useState({ name: "", email: "", company: "", message: "" });
+  useEffect(() => {
+    const onOpen = () => { setForm({ name: "", email: "", company: "", message: "" }); setStatus("idle"); setOpen(true); };
+    window.addEventListener("refly:contact", onOpen);
+    return () => window.removeEventListener("refly:contact", onOpen);
+  }, []);
+  if (!open) return null;
+  const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+  const mailtoFallback = () => {
+    const subj = encodeURIComponent("Refly — Custom / Enterprise plan inquiry");
+    const body = encodeURIComponent(`Name: ${form.name}\nWork email: ${form.email}\nCompany: ${form.company}\n\n${form.message}`);
+    window.location.href = `mailto:support@reflyapp.com?subject=${subj}&body=${body}`;
+  };
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!form.email) return;
+    setStatus("sending");
+    try {
+      const r = await fetch("/api/contact-sales", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!(r.ok && d.ok && d.delivered)) mailtoFallback();   // backend e-posta yoksa mailto yedeği
+    } catch (err) { mailtoFallback(); }
+    setStatus("done");
+  };
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(2,6,23,0.72)", backdropFilter: "blur(4px)" }} onClick={() => setOpen(false)}>
+      <motion.div initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+        className="glass-strong ring-soft rounded-2xl w-full max-w-md p-6 relative" onClick={e => e.stopPropagation()}>
+        <button type="button" onClick={() => setOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition" aria-label="Close"><X size={18} /></button>
+        {status === "done" ? (
+          <div className="text-center py-6">
+            <div className="mx-auto w-12 h-12 rounded-full grid place-items-center bg-emerald-400/15 text-emerald-300 mb-3"><Check size={22} strokeWidth={3} /></div>
+            <h3 className="text-[19px] font-bold text-white">Thanks — we'll be in touch</h3>
+            <p className="mt-2 text-[13.5px] text-slate-400">Our team will reply to <b className="text-slate-200">{form.email || "you"}</b> shortly. You can also reach us at <a className="text-indigo-300 hover:text-indigo-200" href="mailto:support@reflyapp.com">support@reflyapp.com</a>.</p>
+            <button type="button" onClick={() => setOpen(false)} className="mt-5 h-10 px-6 rounded-xl text-[14px] font-semibold text-white bg-gradient-to-r from-indigo-500 to-violet-600 cta-glow">Close</button>
+          </div>
+        ) : (
+          <form onSubmit={submit}>
+            <h3 className="text-[19px] font-bold text-white">Talk to sales</h3>
+            <p className="mt-1 text-[13px] text-slate-400">Tell us about your team and we'll design a custom plan.</p>
+            <div className="mt-4 space-y-2.5">
+              <input required value={form.name} onChange={upd("name")} placeholder="Your name" className={cs_input} />
+              <input required type="email" value={form.email} onChange={upd("email")} placeholder="Work email" className={cs_input} />
+              <input value={form.company} onChange={upd("company")} placeholder="Company / institution" className={cs_input} />
+              <textarea value={form.message} onChange={upd("message")} rows={3} placeholder="What do you need? (team size, use case…)" className={cs_input.replace("h-11", "py-2.5") + " resize-none"} />
+            </div>
+            <button type="submit" disabled={status === "sending"} className="mt-4 w-full h-11 rounded-xl text-[14px] font-semibold text-white bg-gradient-to-r from-indigo-500 to-violet-600 cta-glow disabled:opacity-60">
+              {status === "sending" ? "Sending…" : "Request custom plan"}
+            </button>
+            <p className="mt-3 text-center text-[12px] text-slate-500">or email <a className="text-indigo-300 hover:text-indigo-200" href="mailto:support@reflyapp.com">support@reflyapp.com</a></p>
+          </form>
+        )}
+      </motion.div>
+    </div>
   );
 }
 
@@ -496,6 +564,7 @@ function App() {
         </main>
         <Footer />
       </div>
+      <ContactSales />
     </div>
   );
 }

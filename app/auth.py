@@ -6,6 +6,7 @@ tek kullanıcı, girişsiz, mevcut davranış.
 """
 from __future__ import annotations
 import time
+import secrets
 import threading
 from flask import (Blueprint, request, session, redirect, jsonify,
                    render_template_string, url_for)
@@ -58,11 +59,24 @@ _PAGE = """<!doctype html><html dir="{{ dir }}"><head><meta charset="utf-8">
  a{color:#6d28d9}
  .legal{text-align:center;margin-top:16px;font-size:11px;color:#9aa4b0}
  .legal a{color:#9aa4b0}
+ .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;
+   background:#fff;color:#3c4043;border:1px solid #d8dee6;border-radius:8px;font-size:14px;
+   font-weight:600;cursor:pointer;text-decoration:none;box-sizing:border-box}
+ .gbtn:hover{background:#f7f8fa}
+ .divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#9aa4b0;font-size:12px}
+ .divider::before,.divider::after{content:"";flex:1;height:1px;background:#e3e7ec}
 </style></head><body>
 <form class="card" method="post">
   <h1><img src="/static/refly-icon-128.png" alt="">Refly</h1>
   <p class="sub">{{ subtitle }}</p>
   {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  {% if google_on %}
+  <a class="gbtn" href="{{ google_url }}">
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+    {{ tr.google }}
+  </a>
+  <div class="divider">{{ tr.or }}</div>
+  {% endif %}
   {% if register %}<input name="name" placeholder="{{ tr.name }}" autofocus>{% endif %}
   <input name="email" type="email" placeholder="{{ tr.email }}" required {% if not register %}autofocus{% endif %}>
   <input name="password" type="password" placeholder="{{ tr.password }}" required>
@@ -79,31 +93,31 @@ AUTH_T = {
            "password": "Parola", "bad": "E-posta veya parola hatalı.",
            "weak": "Geçerli e-posta ve en az 8 karakter parola gerekli.",
            "exists": "Bu e-posta zaten kayıtlı.", "no_acc": "Hesabın yok mu?",
-           "has_acc": "Zaten hesabın var mı?"},
+           "has_acc": "Zaten hesabın var mı?", "google": "Google ile devam et", "or": "veya"},
     "en": {"login": "Log in", "register": "Sign up", "sub_login": "Access your library",
            "sub_reg": "Create a new Refly account", "name": "Your name", "email": "Email",
            "password": "Password", "bad": "Wrong email or password.",
            "weak": "A valid email and a password of at least 8 characters are required.",
            "exists": "This email is already registered.", "no_acc": "Don't have an account?",
-           "has_acc": "Already have an account?"},
+           "has_acc": "Already have an account?", "google": "Continue with Google", "or": "or"},
     "fr": {"login": "Se connecter", "register": "S'inscrire", "sub_login": "Accédez à votre bibliothèque",
            "sub_reg": "Créer un nouveau compte Refly", "name": "Votre nom", "email": "E-mail",
            "password": "Mot de passe", "bad": "E-mail ou mot de passe incorrect.",
            "weak": "Un e-mail valide et un mot de passe d'au moins 8 caractères sont requis.",
            "exists": "Cet e-mail est déjà enregistré.", "no_acc": "Pas encore de compte ?",
-           "has_acc": "Vous avez déjà un compte ?"},
+           "has_acc": "Vous avez déjà un compte ?", "google": "Continuer avec Google", "or": "ou"},
     "de": {"login": "Anmelden", "register": "Registrieren", "sub_login": "Auf Ihre Bibliothek zugreifen",
            "sub_reg": "Neues Refly-Konto erstellen", "name": "Ihr Name", "email": "E-Mail",
            "password": "Passwort", "bad": "Falsche E-Mail oder Passwort.",
            "weak": "Eine gültige E-Mail und ein Passwort mit mindestens 8 Zeichen sind erforderlich.",
            "exists": "Diese E-Mail ist bereits registriert.", "no_acc": "Noch kein Konto?",
-           "has_acc": "Schon ein Konto?"},
+           "has_acc": "Schon ein Konto?", "google": "Mit Google fortfahren", "or": "oder"},
     "ar": {"login": "تسجيل الدخول", "register": "إنشاء حساب", "sub_login": "ادخل إلى مكتبتك",
            "sub_reg": "إنشاء حساب Refly جديد", "name": "اسمك", "email": "البريد الإلكتروني",
            "password": "كلمة المرور", "bad": "بريد إلكتروني أو كلمة مرور غير صحيحة.",
            "weak": "مطلوب بريد إلكتروني صالح وكلمة مرور من 8 أحرف على الأقل.",
            "exists": "هذا البريد الإلكتروني مسجّل بالفعل.", "no_acc": "ليس لديك حساب؟",
-           "has_acc": "لديك حساب بالفعل؟"},
+           "has_acc": "لديك حساب بالفعل؟", "google": "المتابعة عبر Google", "or": "أو"},
 }
 
 
@@ -202,6 +216,97 @@ def _send_verification(uid: int, email: str, name: str, lang: str):
     mailer.send(email, vt["subject"], html, text=f"{vt['body']}\n\n{link}")
 
 
+# ------------------------------------------------- Google ile giriş (OAuth 2.0)
+def google_enabled() -> bool:
+    """CLIENT_ID + SECRET ayarlıysa 'Google ile devam et' gösterilir."""
+    return bool(Config.GOOGLE_CLIENT_ID and Config.GOOGLE_CLIENT_SECRET)
+
+
+def _google_redirect_uri() -> str:
+    """Google konsolunda whitelist edilmesi GEREKEN tam callback URL'i."""
+    return f"{_public_base()}/auth/google/callback"
+
+
+def _login_user(uid: int, fallback_name: str = ""):
+    """Oturumu kullanıcı için başlatır (sabitleme önlenir) ve ana sayfaya döner."""
+    session.clear()
+    session.permanent = True
+    session["uid"] = uid
+    u = db.get_user(uid)
+    session["uname"] = (u and (u.get("name") or u.get("email"))) or fallback_name
+    return redirect(url_for("refly.index"))
+
+
+@auth_bp.route("/auth/google")
+def google_login():
+    """OAuth akışını başlat — Google'ın onay ekranına yönlendir."""
+    if not google_enabled():
+        return redirect(url_for("auth.login"))
+    from urllib.parse import urlencode
+    state = secrets.token_urlsafe(24)
+    session["oauth_state"] = state
+    params = {
+        "client_id": Config.GOOGLE_CLIENT_ID,
+        "redirect_uri": _google_redirect_uri(),
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state,
+        "access_type": "online",
+        "prompt": "select_account",
+    }
+    return redirect("https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params))
+
+
+@auth_bp.route("/auth/google/callback")
+def google_callback():
+    """Google'dan dönüş — kod→token→kullanıcı bilgisi, hesabı aç/oluştur, giriş yap."""
+    if not google_enabled():
+        return redirect(url_for("auth.login"))
+    # CSRF: state eşleşmeli
+    state = request.args.get("state", "")
+    if not state or state != session.pop("oauth_state", None):
+        return redirect(url_for("auth.login"))
+    if request.args.get("error") or not request.args.get("code"):
+        return redirect(url_for("auth.login"))
+    if _rate_limited(f"goog:{_client_ip()}", 20, 300):
+        return redirect(url_for("auth.login"))
+    import requests
+    try:
+        tok = requests.post("https://oauth2.googleapis.com/token", data={
+            "code": request.args["code"],
+            "client_id": Config.GOOGLE_CLIENT_ID,
+            "client_secret": Config.GOOGLE_CLIENT_SECRET,
+            "redirect_uri": _google_redirect_uri(),
+            "grant_type": "authorization_code",
+        }, timeout=15)
+        tok.raise_for_status()
+        access = tok.json().get("access_token")
+        if not access:
+            return redirect(url_for("auth.login"))
+        ui = requests.get("https://openidconnect.googleapis.com/v1/userinfo",
+                          headers={"Authorization": f"Bearer {access}"}, timeout=15)
+        ui.raise_for_status()
+        info = ui.json()
+    except Exception as e:
+        print(f"[google-oauth] failed: {e}", flush=True)
+        return redirect(url_for("auth.login"))
+
+    email = (info.get("email") or "").strip().lower()
+    if not email or not info.get("email_verified", False):
+        return redirect(url_for("auth.login"))
+    name = (info.get("name") or info.get("given_name") or "").strip()
+
+    u = db.get_user_by_email(email)
+    if u:
+        uid = u["id"]
+    else:
+        # Google ile ilk giriş → hesabı oluştur (rastgele parola; kullanıcı hiç kullanmaz)
+        uid = db.create_user(email, secrets.token_urlsafe(32), name, verified=True)
+    if not db.is_verified(uid):        # Google e-postayı zaten doğruladı
+        db.set_verified(uid, True)
+    return _login_user(uid, name or email)
+
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     tr, lang = _tr()
@@ -212,14 +317,11 @@ def login():
         else:
             u = db.verify_user(request.form.get("email", ""), request.form.get("password", ""))
             if u:
-                session.clear()               # oturum sabitlemesini önle
-                session.permanent = True
-                session["uid"] = u["id"]
-                session["uname"] = u["name"] or u["email"]
-                return redirect(url_for("refly.index"))
+                return _login_user(u["id"], u["name"] or u["email"])
             error = tr["bad"]
     return render_template_string(_PAGE, title=tr["login"], subtitle=tr["sub_login"], tr=tr,
                                   dir="rtl" if lang == "ar" else "ltr", error=error, register=False,
+                                  google_on=google_enabled(), google_url=url_for("auth.google_login"),
                                   alt_text=tr["no_acc"], alt_url="/register", alt_link=tr["register"])
 
 
@@ -244,13 +346,10 @@ def register():
             # Doğrulama zorunlu ve owner değilse doğrulama e-postası gönder
             if verify_required() and not db.is_verified(uid):
                 _send_verification(uid, email, name, lang)
-            session.clear()
-            session.permanent = True
-            session["uid"] = uid
-            session["uname"] = (name or email)[:80]
-            return redirect(url_for("refly.index"))
+            return _login_user(uid, (name or email)[:80])
     return render_template_string(_PAGE, title=tr["register"], subtitle=tr["sub_reg"], tr=tr,
                                   dir="rtl" if lang == "ar" else "ltr", error=error, register=True,
+                                  google_on=google_enabled(), google_url=url_for("auth.google_login"),
                                   alt_text=tr["has_acc"], alt_url="/login", alt_link=tr["login"])
 
 
@@ -295,7 +394,8 @@ def resend_verification():
 
 # Giriş gerektirmeyen uç noktalar (auth açıkken bile)
 _OPEN = {"auth.login", "auth.register", "auth.logout", "auth.verify_email", "static",
-         "refly.addin_manifest", "refly.healthz", "refly.home",
+         "auth.google_login", "auth.google_callback",
+         "refly.addin_manifest", "refly.healthz", "refly.home", "refly.contact_sales",
          "refly.privacy", "refly.terms", "refly.api_billing_webhook",
          "refly.extension_info", "refly.extension_download",
          "refly.api_stripe_webhook", "refly.api_billing_config"}

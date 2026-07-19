@@ -38,6 +38,7 @@
       {% if csl_ok %}<span class="ok">●</span> <span data-i18n="CSL stilleri aktif">CSL styles active</span>{% else %}<span class="warn">●</span> <span data-i18n="CSL kapalı (yerleşik stiller)">CSL off (built-in styles)</span>{% endif %}
       {% if user_csl %}<br><small><span data-i18n="Stil klasörü:">Style folder:</span> {{ user_csl }}</small>{% endif %}
       <br><a href="/addin/manifest.xml" target="_blank" style="color:#9bb4e8" data-i18n="🔌 Word eklentisi (manifest)">🔌 Word add-in (manifest)</a>
+      <br><a href="mailto:support@reflyapp.com" style="color:#9bb4e8" data-i18n="✉️ Destek">✉️ Support</a>
       {% if auth_on %}<br><small>👤 {{ uname }} · <a href="/logout" style="color:#9bb4e8" data-i18n="Çıkış">Log out</a></small>{% endif %}
     </div>
   </aside>

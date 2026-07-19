@@ -32,6 +32,11 @@ services:
       # İstersen plan limitlerini ez: REFLY_PLANS='{"free":{"autocite":10,...}}'
       - key: ANTHROPIC_API_KEY
         sync: false               # panelden gizli olarak gir
+      # --- Google ile giriş (OAuth) — değerleri Render dashboard'dan gir, repoya YAZMA ---
+      - key: GOOGLE_CLIENT_ID
+        sync: false               # console'daki Client ID (…apps.googleusercontent.com)
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false               # console'daki Client secret (GOCSPX-…) — gizli
       - key: NCBI_EMAIL
         sync: false
       - key: NCBI_API_KEY

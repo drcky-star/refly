@@ -70,6 +70,39 @@ def terms():
     return _legal_page("terms.html")
 
 
+@bp.post("/api/contact-sales")
+def contact_sales():
+    """Özel/Kurumsal plan talebi → support@reflyapp.com'a iletir (herkese açık).
+
+    SMTP ayarlıysa e-posta gönderir (delivered=True); değilse delivered=False döner
+    ve istemci mailto:support@reflyapp.com yedeğine geçer."""
+    from .auth import _rate_limited, _client_ip
+    if _rate_limited(f"sales:{_client_ip()}", 5, 3600):
+        return jsonify({"ok": False, "error": "rate"}), 429
+    data = request.get_json(silent=True) or {}
+    name = (data.get("name") or "").strip()[:120]
+    email = (data.get("email") or "").strip()[:200]
+    company = (data.get("company") or "").strip()[:160]
+    message = (data.get("message") or "").strip()[:4000]
+    if not email or "@" not in email:
+        return jsonify({"ok": False, "error": "email"}), 400
+    if not mailer.configured():
+        # Backend e-posta ayarlı değil → istemci mailto ile göndersin
+        return jsonify({"ok": True, "delivered": False})
+    import html as _html
+    esc = lambda s: _html.escape(s or "")
+    body_html = ("<h3>Refly — Custom / Enterprise plan inquiry</h3>"
+                 f"<p><b>Name:</b> {esc(name)}</p>"
+                 f"<p><b>Work email:</b> {esc(email)}</p>"
+                 f"<p><b>Company:</b> {esc(company)}</p>"
+                 f"<p><b>Message:</b><br>{esc(message).replace(chr(10), '<br>')}</p>")
+    text = (f"Custom / Enterprise plan inquiry\nName: {name}\nWork email: {email}\n"
+            f"Company: {company}\n\n{message}")
+    mailer.send(Config.CONTACT_EMAIL, f"[Refly] Custom plan inquiry — {name or email}",
+                body_html, text=text, reply_to=email)
+    return jsonify({"ok": True, "delivered": True})
+
+
 @bp.get("/api/me")
 def api_me():
     """Geçerli kullanıcı durumu — arayüz doğrulama/onboarding rozetleri için."""

@@ -51,6 +51,10 @@ class Config:
     BILLING_SUCCESS_URL = os.getenv("REFLY_BILLING_SUCCESS_URL", "")  # boşsa istekten türetilir
     BILLING_CANCEL_URL = os.getenv("REFLY_BILLING_CANCEL_URL", "")
 
+    # --- Google ile giriş (OAuth) — CLIENT_ID + SECRET girilince OTOMATİK devreye girer; yoksa gizli ---
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+
     # Claude — otomatik referanslama (iddia tespiti + doğrulama)
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
     MODEL = os.getenv("REFLY_MODEL", "claude-sonnet-4-6")          # doğrulama (yargı ister)

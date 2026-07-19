@@ -19,11 +19,14 @@ def configured() -> bool:
     return bool(Config.SMTP_HOST and Config.SMTP_USER and Config.SMTP_FROM)
 
 
-def _send_sync(to: str, subject: str, html: str, text: str | None = None) -> bool:
+def _send_sync(to: str, subject: str, html: str, text: str | None = None,
+               reply_to: str | None = None) -> bool:
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = formataddr((Config.SMTP_FROM_NAME, Config.SMTP_FROM))
     msg["To"] = to
+    if reply_to:
+        msg["Reply-To"] = reply_to
     msg.set_content(text or "Bu e-postayı görüntülemek için HTML destekli bir istemci kullanın.")
     msg.add_alternative(html, subtype="html")
     ctx = ssl.create_default_context()
@@ -45,12 +48,13 @@ def _send_sync(to: str, subject: str, html: str, text: str | None = None) -> boo
         return False
 
 
-def send(to: str, subject: str, html: str, text: str | None = None, background: bool = True):
+def send(to: str, subject: str, html: str, text: str | None = None, background: bool = True,
+         reply_to: str | None = None):
     """E-posta gönderir. Ayarlı değilse hiçbir şey yapmaz. background=True ise
     arka planda gönderir (istek yanıtını beklemez)."""
     if not configured() or not to:
         return
     if background:
-        threading.Thread(target=_send_sync, args=(to, subject, html, text), daemon=True).start()
+        threading.Thread(target=_send_sync, args=(to, subject, html, text, reply_to), daemon=True).start()
     else:
-        _send_sync(to, subject, html, text)
+        _send_sync(to, subject, html, text, reply_to)
