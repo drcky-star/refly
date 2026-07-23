@@ -396,7 +396,7 @@ def resend_verification():
 _OPEN = {"auth.login", "auth.register", "auth.logout", "auth.verify_email", "static",
          "auth.google_login", "auth.google_callback",
          "refly.addin_manifest", "refly.healthz", "refly.home", "refly.contact_sales",
-         "refly.user_count",
+         "refly.user_count", "refly.robots_txt", "refly.sitemap_xml",
          "refly.privacy", "refly.terms", "refly.api_billing_webhook",
          "refly.extension_info", "refly.extension_download",
          "refly.api_stripe_webhook", "refly.api_billing_config"}

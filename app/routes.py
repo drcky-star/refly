@@ -70,6 +70,32 @@ def terms():
     return _legal_page("terms.html")
 
 
+@bp.get("/robots.txt")
+def robots_txt():
+    """Arama motorları için — pazarlama sayfaları taransın, uygulama/API/auth taranmasın."""
+    body = ("User-agent: *\n"
+            "Disallow: /api/\n"
+            "Disallow: /login\n"
+            "Disallow: /register\n"
+            "Disallow: /logout\n"
+            "Disallow: /verify\n"
+            "Disallow: /addin\n"
+            "Disallow: /auth/\n"
+            f"Sitemap: {_base_url()}/sitemap.xml\n")
+    return body, 200, {"Content-Type": "text/plain; charset=utf-8"}
+
+
+@bp.get("/sitemap.xml")
+def sitemap_xml():
+    """Herkese açık pazarlama sayfaları."""
+    base = _base_url()
+    pages = ["/", "/home", "/privacy", "/terms"]
+    items = "".join(f"<url><loc>{base}{p}</loc><changefreq>weekly</changefreq></url>" for p in pages)
+    xml = ('<?xml version="1.0" encoding="UTF-8"?>'
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + items + '</urlset>')
+    return xml, 200, {"Content-Type": "application/xml; charset=utf-8"}
+
+
 @bp.post("/api/contact-sales")
 def contact_sales():
     """Özel/Kurumsal plan talebi → support@reflyapp.com'a iletir (herkese açık).
