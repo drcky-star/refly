@@ -141,6 +141,22 @@ def _migrate(c):
         c.execute("ALTER TABLE users ADD COLUMN verified INTEGER DEFAULT 0")
         c.execute("UPDATE users SET verified=1")
 
+    # Performans indeksleri — user_id kolonları migration'dan SONRA kesin var.
+    # Çok kiracılı (_scope) sorgular her istekte user_id filtreliyor; ölçekte kritik.
+    # Her biri ayrı guard'lı: bir kolon/tablo yoksa yalnız o atlanır, başlatma bozulmaz.
+    for ddl in (
+        "CREATE INDEX IF NOT EXISTS idx_refs_user     ON refs(user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_refs_user_del ON refs(user_id, deleted_at)",
+        "CREATE INDEX IF NOT EXISTS idx_coll_user     ON collections(user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_shares_email  ON shares(email)",
+        "CREATE INDEX IF NOT EXISTS idx_shares_coll   ON shares(collection_id)",
+        "CREATE INDEX IF NOT EXISTS idx_saved_user    ON saved_searches(user_id)",
+    ):
+        try:
+            c.execute(ddl)
+        except Exception as e:
+            print(f"[db] indeks atlandı ({ddl.split()[5]}): {e}", flush=True)
+
 
 # ---- kullanıcı kapsamı (auth açıkken) -------------------------------------
 def _scope(q: str, args: list, table_alias: str = "") -> tuple[str, list]:

@@ -10,7 +10,7 @@
 <body>
 <div id="app">
   <!-- Kenar çubuğu -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="brand"><img src="{{ url_for('static', filename='refly-icon-128.png') }}" class="logo-img" alt="Refly"> Refly</div>
     <select id="langSel" class="lang-sel" onchange="setLang(this.value)" title="Language / Dil">
       <option value="en">🇬🇧 English</option>
@@ -42,11 +42,13 @@
       {% if auth_on %}<br><small>👤 {{ uname }} · <a href="/logout" style="color:#9bb4e8" data-i18n="Çıkış">Log out</a></small>{% endif %}
     </div>
   </aside>
+  <div id="sideOverlay" class="side-overlay hidden" onclick="toggleSidebar()"></div>
 
   <!-- Ana alan -->
   <main class="main">
     <header class="toolbar">
-      <input id="search" type="search" placeholder="Search library…" data-i18n-ph="Kütüphanede ara…" oninput="debouncedLoad()">
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu" title="Menu">☰</button>
+      <input id="search" type="search" placeholder="Search library…" data-i18n-ph="Kütüphanede ara…" oninput="debouncedLoad()" aria-label="Search library">
       <button class="magic magic-cta" onclick="openAutoCite()" data-i18n="✨ Otomatik referansla">✨ Auto-cite</button>
       <div class="spacer"></div>
       <div class="add-menu">
@@ -67,7 +69,7 @@
       <label><span data-i18n="Stil:">Style:</span>
         <select id="style"></select>
       </label>
-      <button onclick="openStyleSearch()" data-i18n-title="Dergi stili ara" title="Search journal styles">🔎</button>
+      <button onclick="openStyleSearch()" aria-label="Search journal styles" data-i18n-title="Dergi stili ara" title="Search journal styles">🔎</button>
       <button onclick="buildBibliography()" data-i18n="📄 Kaynakça oluştur">📄 Build bibliography</button>
       <div class="export-group">
         <button onclick="exportAs('docx')">Word</button>
@@ -95,7 +97,7 @@
     <strong data-i18n="Kaynakça önizleme">Bibliography preview</strong>
     <span>
       <button onclick="copyBiblio()" data-i18n="Kopyala">Copy</button>
-      <button onclick="closePanel('biblioPanel')">✕</button>
+      <button onclick="closePanel('biblioPanel')" aria-label="Close">✕</button>
     </span>
   </div>
   <ol id="biblioList" class="biblio"></ol>
@@ -108,7 +110,17 @@
 
 <div id="toast" class="toast hidden"></div>
 
-<script>const CSL_OK = {{ 'true' if csl_ok else 'false' }};</script>
+<script>
+const CSL_OK = {{ 'true' if csl_ok else 'false' }};
+function toggleSidebar(){var s=document.getElementById('sidebar'),o=document.getElementById('sideOverlay');if(!s)return;var open=s.classList.toggle('open');if(o)o.classList.toggle('hidden',!open);}
+// Mobilde koleksiyon seçilince çekmeceyi otomatik kapat
+document.addEventListener('click',function(e){
+  if(window.innerWidth<=820&&e.target.closest&&e.target.closest('#collections .coll')){
+    var s=document.getElementById('sidebar');
+    if(s&&s.classList.contains('open')){s.classList.remove('open');var o=document.getElementById('sideOverlay');if(o)o.classList.add('hidden');}
+  }
+});
+</script>
 <script src="{{ url_for('static', filename='i18n.js') }}"></script>
 <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>

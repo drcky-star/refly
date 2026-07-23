@@ -141,12 +141,20 @@ async function deleteCollection(id, name) {
 let _deb;
 function debouncedLoad() { clearTimeout(_deb); _deb = setTimeout(loadRefs, 280); }
 
+function _skeletonRows(n) {
+  let s = "";
+  for (let i = 0; i < n; i++) s += '<div class="skel-row"><div class="skel w70"></div><div class="skel w40"></div><div class="skel w90"></div></div>';
+  return s;
+}
+
 async function loadRefs() {
   const search = $("#search").value.trim();
   if (state.view === "trash") {
     const { refs } = await api("/api/trash");
     state.refs = refs; renderTrash(); return;
   }
+  const _box = $("#refList");
+  if (_box) _box.innerHTML = _skeletonRows(4);   // yüklenirken iskelet göster
   let url = `/api/refs?collection=${state.collection}&search=${encodeURIComponent(search)}`;
   if (state.view === "starred") url += "&starred=1";
   if (state.tag) url += `&tag=${encodeURIComponent(state.tag)}`;
