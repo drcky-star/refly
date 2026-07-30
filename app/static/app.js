@@ -617,6 +617,7 @@ function openWriter() {
     </div>
     <div class="modal-actions">
       <button onclick="closeModal()">${t("Kapat")}</button>
+      <button id="wRephraseBtn" class="magic" onclick="wRephrase()" title="${t("Seçili metni (yoksa tümünü) daha net/akademik yaz — atıflar korunur")}">${t("✍️ Yeniden ifade et")}</button>
       <button onclick="wCopy()">${t("📋 Metni kopyala")}</button>
       <button class="primary" onclick="wExport()">${t("Word olarak indir")}</button>
     </div>`, true);
@@ -664,6 +665,26 @@ async function wExport() {
   const r = await fetch("/api/manuscript/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, style: $("#wStyle").value }) });
   if (!r.ok) return toast(t("Hata"));
   downloadBlob(await r.blob(), r); toast(t("İndirildi ✓"));
+}
+async function wRephrase() {
+  const ta = $("#wText");
+  let s = ta.selectionStart, e = ta.selectionEnd;
+  if (s === e) { s = 0; e = ta.value.length; }        // seçim yoksa tüm metin
+  const sel = ta.value.slice(s, e).trim();
+  if (!sel) return toast(t("Önce yaz"));
+  const btn = $("#wRephraseBtn"), lbl = btn ? btn.textContent : "";
+  if (btn) { btn.disabled = true; btn.textContent = "…"; }
+  try {
+    const d = await api("/api/rephrase", { method: "POST", body: JSON.stringify({ text: sel }) });
+    if (d && d.text) {
+      ta.value = ta.value.slice(0, s) + d.text + ta.value.slice(e);
+      ta.selectionStart = s; ta.selectionEnd = s + d.text.length;
+      wPreview();
+      toast(t("Yeniden yazıldı ✓"));
+    }
+  } catch (err) { toast(err.message || t("Hata")); }
+  if (btn) { btn.disabled = false; btn.textContent = lbl; }
+  ta.focus();
 }
 
 let _mdeb, _msResult = null;

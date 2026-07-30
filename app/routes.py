@@ -9,7 +9,7 @@ from .config import Config
 from .core import (db, pubmed, crossref, references as ref, csl, docx_export,
                    integrity, pdf_import, manuscript, autocite, enrich, icite, tagger,
                    backup, quota, mailer, sources, audit, synthesis, library_qa, metrics,
-                   alerts, billing)
+                   alerts, billing, rephrase)
 
 bp = Blueprint("refly", __name__)
 
@@ -925,6 +925,26 @@ def api_synthesize():
                for n in res.get("used", []) if 1 <= n <= len(recs)]
     return jsonify({"synthesis": res.get("synthesis", ""), "sources": sources,
                     "n_sources": res.get("n_sources", 0)})
+
+
+@bp.post("/api/rephrase")
+def api_rephrase():
+    """Akademik yeniden ifade — seçili pasajı daha net/akademik yazar, ATIFLARI korur.
+    AI-tespit atlatma DEĞİL. Giriş gerektirir; maliyet için IP başına saatlik sınır."""
+    if not Config.ANTHROPIC_API_KEY:
+        return jsonify({"error": "ANTHROPIC_API_KEY gerekli"}), 400
+    from .auth import _rate_limited, _client_ip
+    if _rate_limited(f"rephrase:{_client_ip()}", 60, 3600):
+        return jsonify({"error": "Çok fazla istek — biraz bekleyin."}), 429
+    text = ((request.json or {}).get("text") or "").strip()
+    if not text:
+        return jsonify({"error": "Metin gerekli"}), 400
+    try:
+        out = rephrase.Rephraser(Config.ANTHROPIC_API_KEY, Config.MODEL).run(text)
+    except Exception as e:
+        print(f"[rephrase] hata: {e}", flush=True)
+        return jsonify({"error": "Yeniden ifade başarısız"}), 502
+    return jsonify({"text": out})
 
 
 # --------------------------------------------------- Kütüphanene Sor (Ask-your-library)

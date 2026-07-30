@@ -4,6 +4,9 @@
 
 const I18N = {
   en: {
+    "✍️ Yeniden ifade et": "✍️ Rephrase",
+    "Yeniden yazıldı ✓": "Rewritten ✓",
+    "Seçili metni (yoksa tümünü) daha net/akademik yaz — atıflar korunur": "Rewrite the selected text (or all) more clearly & academically — citations preserved",
     // --- eksik olup İngilizce'de Türkçe görünen v3 metinleri (toplu eklendi) ---
     "(Yanıtta kütüphane kaynağı kullanılmadı)": "(No library source was used in the answer)",
     "Alarm eklendi ✓ (temel kuruldu)": "Alert added ✓ (baseline set)",
@@ -372,6 +375,9 @@ const I18N = {
   },
 
   fr: {
+    "✍️ Yeniden ifade et": "✍️ Reformuler",
+    "Yeniden yazıldı ✓": "Reformulé ✓",
+    "Seçili metni (yoksa tümünü) daha net/akademik yaz — atıflar korunur": "Reformuler le texte sélectionné (ou tout) plus clairement et de façon académique — citations conservées",
     // --- v3 özellik metinleri (İngilizce çeviriyle eş, toplu eklendi) ---
     "(Yanıtta kütüphane kaynağı kullanılmadı)": "(Aucune source de la bibliothèque n'a été utilisée dans la réponse)",
     "Alarm eklendi ✓ (temel kuruldu)": "Alerte ajoutée ✓ (référence établie)",
@@ -722,6 +728,9 @@ const I18N = {
   },
 
   de: {
+    "✍️ Yeniden ifade et": "✍️ Umformulieren",
+    "Yeniden yazıldı ✓": "Umformuliert ✓",
+    "Seçili metni (yoksa tümünü) daha net/akademik yaz — atıflar korunur": "Markierten Text (oder alles) klarer & akademischer umschreiben — Zitate bleiben erhalten",
     // --- v3 özellik metinleri (İngilizce çeviriyle eş, toplu eklendi) ---
     "(Yanıtta kütüphane kaynağı kullanılmadı)": "(Es wurde keine Quelle aus der Bibliothek in der Antwort verwendet)",
     "Alarm eklendi ✓ (temel kuruldu)": "Benachrichtigung hinzugefügt ✓ (Basis erstellt)",
@@ -1072,6 +1081,9 @@ const I18N = {
   },
 
   ar: {
+    "✍️ Yeniden ifade et": "✍️ إعادة الصياغة",
+    "Yeniden yazıldı ✓": "تمت إعادة الصياغة ✓",
+    "Seçili metni (yoksa tümünü) daha net/akademik yaz — atıflar korunur": "أعد صياغة النص المحدد (أو الكل) بأسلوب أوضح وأكاديمي — مع الحفاظ على الاقتباسات",
     // --- v3 özellik metinleri (İngilizce çeviriyle eş, toplu eklendi) ---
     "(Yanıtta kütüphane kaynağı kullanılmadı)": "(لم يُستخدم أي مصدر من المكتبة في الإجابة)",
     "Alarm eklendi ✓ (temel kuruldu)": "تمت إضافة التنبيه ✓ (تم ضبط الأساس)",
