@@ -216,6 +216,7 @@ function renderRefs() {
       <div class="row-actions">
         ${isIncomplete(r) ? `<button onclick="enrichOne(${r.id})" title="${t("Eksik alanları CrossRef/PubMed'den doldur")}">${t("🩹 Tamamla")}</button>` : ""}
         <button onclick="showRelated(${r.id})" title="${t("Benzer/ilgili makaleler öner")}">${t("🔗 İlgili")}</button>
+        <button onclick="showSnowball(${r.id})" title="${t("Atıf ağı: kaynakça + atıf verenler")}">${t("🌐 Ağ")}</button>
         <button onclick="showMetrics(${r.id})" title="${t("Dergi metrikleri (etki, h-index)")}">📊</button>
         <button onclick="copyOne(${r.id})">${t("Kopyala")}</button>
         <button onclick="openEdit(${r.id})">${t("Düzenle")}</button>
@@ -778,6 +779,92 @@ async function addSelectedRelated() {
   if (!items.length) return toast(t("Seçim yok"));
   const j = await api("/api/import/add", { method: "POST", body: JSON.stringify({ items, collection: collForImport() }) });
   closeModal(); toast(importedMsg(j)); loadRefs(); loadCollections();
+}
+// ---------------------------------------------------------- atıf ağı (snowball)
+let _snowRefs = [], _snowCits = [];
+async function showSnowball(id) {
+  showModal(`<h2>${t("🌐 Atıf ağı")}</h2><div id="snowBody"><span class="spin"></span> ${t("Atıf ağı taranıyor…")}</div>`, true);
+  try {
+    const j = await api(`/api/refs/${id}/snowball`);
+    _snowRefs = j.references || []; _snowCits = j.citations || [];
+    if (!_snowRefs.length && !_snowCits.length) { $("#snowBody").innerHTML = `<p>${t("Yeni makale bulunamadı (hepsi zaten kütüphanende olabilir).")}</p>`; return; }
+    const sect = (title, arr, pfx) => arr.length ? `<h3 style="margin:14px 0 6px;font-size:14.5px">${title} <span style="color:#8a97a8;font-weight:400">(${arr.length})</span></h3>` +
+      arr.map((c, i) => `<div class="cand"><input type="checkbox" id="${pfx}${i}">
+        <div><div class="cand-title">${esc(c.title)}</div>
+        <div class="cand-meta">${esc((c.authors || []).slice(0, 3).join(", "))} · ${esc(c.journal)} · ${esc(c.year)}${refLinks(c)}</div></div></div>`).join("") : "";
+    $("#snowBody").innerHTML =
+      `<p style="color:#6b7785;font-size:13px">${t("\"{0}…\" makalesinin atıf ağı — kütüphanende olmayanlar.", esc((j.source_title || "").slice(0, 70)))}</p>` +
+      sect(t("📖 Kaynakçası (bu makalenin atıf yaptıkları)"), _snowRefs, "sr") +
+      sect(t("📈 Atıf verenler (bu makaleyi gösterenler)"), _snowCits, "sc") +
+      `<div class="modal-actions"><button onclick="closeModal()">${t("Kapat")}</button>
+        <button class="primary" onclick="addSelectedSnowball()">${t("Seçilenleri ekle")}</button></div>`;
+  } catch (e) { $("#snowBody").innerHTML = `<p style="color:#c0392b">${esc(e.message)}</p>`; }
+}
+async function addSelectedSnowball() {
+  const items = [..._snowRefs.filter((_, i) => $("#sr" + i)?.checked), ..._snowCits.filter((_, i) => $("#sc" + i)?.checked)];
+  if (!items.length) return toast(t("Seçim yok"));
+  const j = await api("/api/import/add", { method: "POST", body: JSON.stringify({ items, collection: collForImport() }) });
+  closeModal(); toast(importedMsg(j)); loadRefs(); loadCollections();
+}
+// ---------------------------------------------------------- kanıt-yönü (Consensus Meter)
+function openEvidence() {
+  showModal(`<h2>${t("⚖️ Kanıt kontrolü")}</h2>
+    <p style="color:#6b7785;font-size:13px">${t("Evet/hayır klinik bir soru yaz; Refly gerçek makaleleri bulup her birini destekliyor/desteklemiyor/karışık diye sınıflar.")}</p>
+    <div class="field"><input id="evQ" placeholder="${t("ör. Egzersiz tedavisi kronik bel ağrısını azaltır mı?")}" onkeydown="if(event.key==='Enter')runEvidence()" autocomplete="off"></div>
+    <div style="display:flex;gap:10px"><span style="flex:1"></span>
+      <button onclick="closeModal()">${t("Kapat")}</button>
+      <button class="primary magic" onclick="runEvidence()">${t("Kanıtı tara")}</button></div>
+    <div id="evBody"></div>`, true);
+}
+async function runEvidence() {
+  const q = $("#evQ").value.trim(); if (!q) return toast(t("Soru yaz"));
+  $("#evBody").innerHTML = `<div class="ac-prog-label" style="margin-top:12px"><span class="spin"></span> ${t("Kanıt taranıyor…")}</div>`;
+  try {
+    const r = await api("/api/evidence", { method: "POST", body: JSON.stringify({ question: q }) });
+    if (!r.verdicts || !r.verdicts.length) { $("#evBody").innerHTML = `<p style="margin-top:12px">${t("Kaynak bulunamadı — soruyu sadeleştir.")}</p>`; return; }
+    const c = r.counts, tot = r.n || 1, pct = k => Math.round((c[k] || 0) / tot * 100);
+    const meter = `<div style="display:flex;height:14px;border-radius:8px;overflow:hidden;margin:14px 0 5px">
+      <div style="width:${pct('yes')}%;background:#16a34a"></div><div style="width:${pct('no')}%;background:#e11d48"></div>
+      <div style="width:${pct('mixed')}%;background:#d97706"></div><div style="width:${pct('unclear')}%;background:#cbd5e1"></div></div>
+      <div style="font-size:12.5px;color:#6b7785;margin-bottom:6px">
+        <span style="color:#16a34a">● ${t("Destekliyor")}: ${c.yes || 0}</span> · <span style="color:#e11d48">● ${t("Desteklemiyor")}: ${c.no || 0}</span> · <span style="color:#d97706">● ${t("Karışık")}: ${c.mixed || 0}</span> · <span style="color:#94a3b8">● ${t("Belirsiz")}: ${c.unclear || 0}</span></div>`;
+    const badge = s => ({ yes: `<span class="badge" style="background:#dcfce7;color:#15803d">${t("Destekliyor")}</span>`, no: `<span class="badge" style="background:#ffe4e6;color:#be123c">${t("Desteklemiyor")}</span>`, mixed: `<span class="badge" style="background:#fef3c7;color:#b45309">${t("Karışık")}</span>`, unclear: `<span class="badge">${t("Belirsiz")}</span>` }[s] || "");
+    const cards = r.verdicts.map(v => `<div class="cand" style="display:block">
+      <div style="margin-bottom:3px">${badge(v.stance)}</div>
+      <div class="cand-title">${esc(v.title)}</div>
+      <div class="cand-meta">${esc((v.authors || [])[0] || "")} · ${esc(v.journal)} · ${esc(v.year)}${refLinks(v)}</div>
+      ${v.finding ? `<div style="font-size:13px;margin-top:4px">${esc(v.finding)}</div>` : ""}</div>`).join("");
+    $("#evBody").innerHTML = meter + `<p style="font-size:11.5px;color:#8a97a8;margin:2px 0 8px">${t("Not: sınıflama AI tahminidir, kesin gerçek değildir — kaynakları kendin doğrula.")}</p>` + cards;
+  } catch (e) { $("#evBody").innerHTML = `<p style="color:#c0392b;margin-top:12px">${esc(e.message)}</p>`; }
+}
+// ---------------------------------------------------------- karşılaştırma matrisi
+let _cmp = null;
+function cmpCol(k) { return { design: "Çalışma tasarımı", sample: "Örneklem (N / popülasyon)", outcome: "Ana sonuç / bulgu", limitations: "Sınırlılıklar / rigor" }[k] || k; }
+async function openCompare() {
+  if (state.selected.size < 2) return toast(t("Karşılaştırmak için en az 2 kaynak seç (satırdaki kutucuk)."));
+  showModal(`<h2>${t("📊 Karşılaştırma matrisi")}</h2><div id="cmpBody"><div class="ac-prog-label" style="margin-top:12px"><span class="spin"></span> ${t("Çıkarılıyor…")}</div></div>`, true);
+  try {
+    _cmp = await api("/api/compare", { method: "POST", body: JSON.stringify({ ids: [...state.selected] }) });
+    const rows = _cmp.rows || [];
+    if (!rows.length) { $("#cmpBody").innerHTML = `<p>${t("Sonuç yok")}</p>`; return; }
+    let html = `<div style="overflow:auto;max-height:58vh"><table class="cmp-table"><thead><tr><th>${t("Makale")}</th>${_cmp.columns.map(cl => `<th>${t(cmpCol(cl.key))}</th>`).join("")}</tr></thead><tbody>`;
+    rows.forEach(row => {
+      html += `<tr><td><b>${esc((row.authors || [])[0] || "")} ${esc(row.year || "")}</b><br><span style="color:#6b7785">${esc((row.title || "").slice(0, 90))}</span>${refLinks(row)}</td>
+        <td>${esc(row.design)}</td><td>${esc(row.sample)}</td><td>${esc(row.outcome)}</td><td>${esc(row.limitations)}</td></tr>`;
+    });
+    html += `</tbody></table></div><div class="modal-actions"><button onclick="closeModal()">${t("Kapat")}</button><button class="primary" onclick="exportCompareCsv()">${t("⬇ CSV indir")}</button></div>`;
+    $("#cmpBody").innerHTML = html;
+  } catch (e) { $("#cmpBody").innerHTML = `<p style="color:#c0392b">${esc(e.message)}</p>`; }
+}
+function exportCompareCsv() {
+  if (!_cmp || !_cmp.rows) return;
+  const cell = s => `"${String(s ?? "").replace(/"/g, '""')}"`;
+  const head = ["Author", "Year", "Title", "DOI", "PMID", "Design", "Sample", "Outcome", "Limitations"];
+  const lines = [head.map(cell).join(",")];
+  _cmp.rows.forEach(r => lines.push([(r.authors || [])[0] || "", r.year, r.title, r.doi, r.pmid, r.design, r.sample, r.outcome, r.limitations].map(cell).join(",")));
+  const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "refly-comparison.csv"; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1500);
 }
 
 // ---------------------------------------------------------- otomatik etiketleme

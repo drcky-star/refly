@@ -9,7 +9,8 @@ from .config import Config
 from .core import (db, pubmed, crossref, references as ref, csl, docx_export,
                    integrity, pdf_import, manuscript, autocite, enrich, icite, tagger,
                    backup, quota, mailer, sources, audit, synthesis, library_qa, metrics,
-                   alerts, billing, rephrase, disclosure)
+                   alerts, billing, rephrase, disclosure, semantic_scholar as sources_ss,
+                   evidence, compare)
 
 bp = Blueprint("refly", __name__)
 
@@ -665,6 +666,23 @@ def api_related(rid):
     return jsonify({"candidates": recs[:20], "source_title": r.get("title", "")})
 
 
+@bp.get("/api/refs/<int:rid>/snowball")
+def api_snowball(rid):
+    """Atıf-ağı ile ilgili makale keşfi (Semantic Scholar): bu makalenin kaynakçası +
+    ona atıf verenler. Kütüphanede zaten olanlar elenir."""
+    r = db.get_ref(rid)
+    if not r:
+        return jsonify({"error": "bulunamadı"}), 404
+    if not (r.get("doi") or r.get("pmid")):
+        return jsonify({"error": "Bu kayıt için DOI/PMID yok (atıf ağı gerektirir)."}), 422
+    res = sources_ss.snowball(doi=r.get("doi", ""), pmid=r.get("pmid", ""))
+    existing = db.existing_keys()
+    clean = lambda lst: [x for x in lst if not (_rec_keys(x) & existing)][:20]
+    return jsonify({"references": clean(res.get("references", [])),
+                    "citations": clean(res.get("citations", [])),
+                    "source_title": r.get("title", "")})
+
+
 @bp.post("/api/refs/<int:rid>/enrich")
 def api_enrich_one(rid):
     r = db.get_ref(rid)
@@ -963,6 +981,42 @@ def api_ai_disclosure():
     else:
         stmt = disclosure.build_statement(uses)
     return jsonify({"statement": stmt})
+
+
+@bp.post("/api/evidence")
+def api_evidence():
+    """Kanıt-yönü (Consensus Meter) — EVET/HAYIR soruya gerçek makaleler bulur, her birini
+    destekliyor/desteklemiyor/karışık diye sınıflar. Giriş şart; IP başına 20/saat."""
+    if not Config.ANTHROPIC_API_KEY:
+        return jsonify({"error": "ANTHROPIC_API_KEY gerekli"}), 400
+    from .auth import _rate_limited, _client_ip
+    if _rate_limited(f"evid:{_client_ip()}", 20, 3600):
+        return jsonify({"error": "Çok fazla istek — biraz bekleyin."}), 429
+    q = ((request.json or {}).get("question") or "").strip()
+    if not q:
+        return jsonify({"error": "Soru gerekli"}), 400
+    recs = sources.MultiSource(_pm(), Config.CROSSREF_EMAIL).search(q, k=12)
+    if not recs:
+        return jsonify({"question": q, "verdicts": [], "counts": {"yes": 0, "no": 0, "mixed": 0, "unclear": 0},
+                        "n": 0, "note": "Kaynak bulunamadı"})
+    res = evidence.Evidence(Config.ANTHROPIC_API_KEY, Config.MODEL).run(q, recs)
+    return jsonify(res)
+
+
+@bp.post("/api/compare")
+def api_compare():
+    """Seçili kayıtlardan yapılandırılmış karşılaştırma matrisi (tasarım/örneklem/sonuç/sınırlılık).
+    Giriş şart; IP başına 20/saat; token için en çok 10 kayıt."""
+    if not Config.ANTHROPIC_API_KEY:
+        return jsonify({"error": "ANTHROPIC_API_KEY gerekli"}), 400
+    from .auth import _rate_limited, _client_ip
+    if _rate_limited(f"cmp:{_client_ip()}", 20, 3600):
+        return jsonify({"error": "Çok fazla istek — biraz bekleyin."}), 429
+    recs = _collect(request.json or {})[:10]
+    if not recs:
+        return jsonify({"error": "Kaynak seçilmedi"}), 400
+    res = compare.Comparator(Config.ANTHROPIC_API_KEY, Config.MODEL).run(recs)
+    return jsonify(res)
 
 
 # --------------------------------------------------- Kütüphanene Sor (Ask-your-library)

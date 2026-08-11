@@ -6,7 +6,35 @@ import time
 import requests
 
 _API = "https://api.semanticscholar.org/graph/v1/paper/search"
+_GRAPH = "https://api.semanticscholar.org/graph/v1/paper"
 _FIELDS = "title,abstract,year,authors,venue,journal,externalIds"
+
+
+def snowball(doi: str = "", pmid: str = "", limit: int = 25) -> dict:
+    """Atıf-ağı ile ilgili makale keşfi (snowball):
+      references = bu makalenin ATIF YAPTIĞI (kaynakça) makaleler,
+      citations  = bu makaleye ATIF VEREN (sonraki) makaleler.
+    DOI ya da PMID gerektirir; hata/429 → boş listeler."""
+    pid = f"DOI:{doi}" if doi else (f"PMID:{pmid}" if pmid else "")
+    out = {"references": [], "citations": []}
+    if not pid:
+        return out
+    for kind, sub, inner in (("references", "references", "citedPaper"),
+                             ("citations", "citations", "citingPaper")):
+        try:
+            r = requests.get(f"{_GRAPH}/{pid}/{sub}", headers=_headers(),
+                             params={"fields": _FIELDS, "limit": limit}, timeout=20)
+            if r.status_code != 200:
+                continue
+            recs = []
+            for it in (r.json().get("data") or []):
+                p = (it or {}).get(inner) or {}
+                if p.get("title"):
+                    recs.append(_map(p))
+            out[kind] = recs
+        except Exception:
+            continue
+    return out
 
 
 def _headers() -> dict:
