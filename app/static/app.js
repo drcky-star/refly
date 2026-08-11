@@ -686,6 +686,47 @@ async function wRephrase() {
   if (btn) { btn.disabled = false; btn.textContent = lbl; }
   ta.focus();
 }
+function openDisclosure() {
+  showModal(`<h2>${t("📄 AI kullanım beyanı")}</h2>
+    <p style="color:#6b7785;font-size:13px">${t("Dergilerin istediği 'AI'yı nerede kullandım' beyanını dürüstçe üretir — şeffaflık için, gizlemek için değil.")}</p>
+    <div class="field"><label>${t("Refly'da hangi AI yardımlarını kullandın?")}</label>
+      <label class="dchk"><input type="checkbox" class="dUse" value="autocite" checked> ${t("Otomatik referanslama (gerçek kaynak + atıf)")}</label>
+      <label class="dchk"><input type="checkbox" class="dUse" value="rephrase"> ${t("Metin netleştirme (Rephrase)")}</label>
+      <label class="dchk"><input type="checkbox" class="dUse" value="synthesis"> ${t("AI literatür sentezi")}</label>
+      <label class="dchk"><input type="checkbox" class="dUse" value="asklibrary"> ${t("Kütüphaneye sor (atıflı yanıt)")}</label>
+      <label class="dchk"><input type="checkbox" class="dUse" value="audit"> ${t("Atıf denetimi / geri çekilme kontrolü")}</label>
+      <label class="dchk"><input type="checkbox" class="dUse" value="autotag"> ${t("Otomatik etiketleme")}</label>
+    </div>
+    <div class="field" style="display:flex;gap:8px">
+      <input id="dJournal" placeholder="${t("Dergi / politika (opsiyonel), ör. ICMJE, Nature")}" style="flex:1" autocomplete="off">
+      <select id="dPlace" style="max-width:180px" title="${t("Nerede görünecek")}">
+        <option value="Methods">${t("Yöntemler")}</option>
+        <option value="Acknowledgements">${t("Teşekkür")}</option>
+        <option value="Declaration">${t("Beyan")}</option>
+        <option value="Cover letter">${t("Ön yazı")}</option>
+      </select>
+    </div>
+    <div id="dOut" class="ac-text hidden" style="white-space:pre-wrap;margin-top:4px"></div>
+    <div class="modal-actions">
+      <button onclick="closeModal()">${t("Kapat")}</button>
+      <button id="dCopyBtn" class="hidden" onclick="copyStr($('#dOut').textContent)">${t("📋 Kopyala")}</button>
+      <button id="dGenBtn" class="primary" onclick="genDisclosure()">${t("Beyanı üret")}</button>
+    </div>`, true);
+}
+async function genDisclosure() {
+  const uses = [...document.querySelectorAll(".dUse:checked")].map(c => c.value);
+  const journal = $("#dJournal").value.trim(), placement = $("#dPlace").value;
+  const btn = $("#dGenBtn"), lbl = btn ? btn.textContent : "";
+  if (btn) { btn.disabled = true; btn.textContent = "…"; }
+  try {
+    const d = await api("/api/ai-disclosure", { method: "POST", body: JSON.stringify({ uses, journal, placement }) });
+    const out = $("#dOut");
+    out.textContent = d.statement || "";
+    out.classList.remove("hidden");
+    $("#dCopyBtn").classList.remove("hidden");
+  } catch (err) { toast(err.message || t("Hata")); }
+  if (btn) { btn.disabled = false; btn.textContent = lbl; }
+}
 
 let _mdeb, _msResult = null;
 function msPreview() {

@@ -9,7 +9,7 @@ from .config import Config
 from .core import (db, pubmed, crossref, references as ref, csl, docx_export,
                    integrity, pdf_import, manuscript, autocite, enrich, icite, tagger,
                    backup, quota, mailer, sources, audit, synthesis, library_qa, metrics,
-                   alerts, billing, rephrase)
+                   alerts, billing, rephrase, disclosure)
 
 bp = Blueprint("refly", __name__)
 
@@ -945,6 +945,24 @@ def api_rephrase():
         print(f"[rephrase] hata: {e}", flush=True)
         return jsonify({"error": "Yeniden ifade başarısız"}), 502
     return jsonify({"text": out})
+
+
+@bp.post("/api/ai-disclosure")
+def api_ai_disclosure():
+    """DÜRÜST AI-kullanım beyanı üretir (şeffaflık — humanizer/gizleme DEĞİL). Giriş şart.
+    Claude varsa dergiye göre cilalar; yoksa şablon döner (her zaman çalışır)."""
+    from .auth import _rate_limited, _client_ip
+    if _rate_limited(f"disc:{_client_ip()}", 60, 3600):
+        return jsonify({"error": "Çok fazla istek — biraz bekleyin."}), 429
+    d = request.json or {}
+    uses = [u for u in (d.get("uses") or []) if isinstance(u, str)][:12]
+    journal = (d.get("journal") or "").strip()[:120]
+    placement = (d.get("placement") or "").strip()[:60]
+    if Config.ANTHROPIC_API_KEY:
+        stmt = disclosure.Disclosure(Config.ANTHROPIC_API_KEY, Config.MODEL).run(uses, journal, placement)
+    else:
+        stmt = disclosure.build_statement(uses)
+    return jsonify({"statement": stmt})
 
 
 # --------------------------------------------------- Kütüphanene Sor (Ask-your-library)
