@@ -4,6 +4,10 @@
 
 const I18N = {
   en: {
+    "📌 Doğrula — her kaynağın destekleyen pasajı:": "📌 Verify — the supporting passage from each source:",
+    "Referans sağlığı": "Reference health",
+    "Bütünlük bayrağı yok": "No integrity flags",
+    "Atıf": "Citations",
     "🔭 Derin arama": "🔭 Deep search",
     "Çok turlu arama: her tur yeni açılar üretir, tek aramadan çok daha fazlasını bulur; sonunda dürüst bir kapsama tahmini verir. ~30 sn sürebilir.": "Multi-round search: each round generates new angles, finding far more than a single search; ends with an honest coverage estimate. May take ~30s.",
     "Araştırma sorusu / konu": "Research question / topic",
@@ -467,6 +471,10 @@ const I18N = {
   },
 
   fr: {
+    "📌 Doğrula — her kaynağın destekleyen pasajı:": "📌 Vérifier — le passage justificatif de chaque source :",
+    "Referans sağlığı": "Santé de la référence",
+    "Bütünlük bayrağı yok": "Aucun signalement d'intégrité",
+    "Atıf": "Citations",
     "🔭 Derin arama": "🔭 Recherche approfondie",
     "Çok turlu arama: her tur yeni açılar üretir, tek aramadan çok daha fazlasını bulur; sonunda dürüst bir kapsama tahmini verir. ~30 sn sürebilir.": "Recherche multi-tours : chaque tour génère de nouveaux angles, trouvant bien plus qu'une seule recherche ; se termine par une estimation honnête de la couverture. Peut prendre ~30 s.",
     "Araştırma sorusu / konu": "Question / sujet de recherche",
@@ -912,6 +920,10 @@ const I18N = {
   },
 
   de: {
+    "📌 Doğrula — her kaynağın destekleyen pasajı:": "📌 Überprüfen — die belegende Passage jeder Quelle:",
+    "Referans sağlığı": "Referenz-Status",
+    "Bütünlük bayrağı yok": "Keine Integritätswarnungen",
+    "Atıf": "Zitate",
     "🔭 Derin arama": "🔭 Tiefensuche",
     "Çok turlu arama: her tur yeni açılar üretir, tek aramadan çok daha fazlasını bulur; sonunda dürüst bir kapsama tahmini verir. ~30 sn sürebilir.": "Mehrrunden-Suche: Jede Runde erzeugt neue Ansätze und findet weit mehr als eine einzelne Suche; endet mit einer ehrlichen Abdeckungsschätzung. Kann ~30 s dauern.",
     "Araştırma sorusu / konu": "Forschungsfrage / Thema",
@@ -1357,6 +1369,10 @@ const I18N = {
   },
 
   ar: {
+    "📌 Doğrula — her kaynağın destekleyen pasajı:": "📌 تحقّق — المقطع الداعم من كل مصدر:",
+    "Referans sağlığı": "حالة المرجع",
+    "Bütünlük bayrağı yok": "لا إشارات نزاهة",
+    "Atıf": "استشهادات",
     "🔭 Derin arama": "🔭 بحث عميق",
     "Çok turlu arama: her tur yeni açılar üretir, tek aramadan çok daha fazlasını bulur; sonunda dürüst bir kapsama tahmini verir. ~30 sn sürebilir.": "بحث متعدد الجولات: كل جولة تولّد زوايا جديدة وتجد أكثر بكثير من بحث واحد؛ وينتهي بتقدير صادق للتغطية. قد يستغرق ~30 ثانية.",
     "Araştırma sorusu / konu": "سؤال / موضوع البحث",

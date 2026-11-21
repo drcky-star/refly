@@ -222,7 +222,10 @@ class LibraryQA:
             "citation marker with the id of the source(s) that support it, e.g. [3] or "
             "[1][2]. Only cite ids that actually appear in the sources. If the sources do "
             "not contain enough information to answer, say clearly that you cannot find the "
-            "answer in the library, and do not guess. Be concise and factual."
+            "answer in the library, and do not guess. Be concise and factual. "
+            "Additionally, for EACH source you cite, provide in 'quotes' the exact VERBATIM "
+            "sentence (copied character-for-character from that source's text) that supports "
+            "your use of it — so the reader can verify the claim against the original."
         )
         user = (
             f"QUESTION:\n{question}\n\n"
@@ -242,6 +245,15 @@ class LibraryQA:
                     "items": {"type": "string"},
                     "description": "The source ids actually cited in the answer.",
                 },
+                "quotes": {
+                    "type": "array",
+                    "items": {"type": "object", "properties": {
+                        "id": {"type": "string", "description": "A cited source id"},
+                        "quote": {"type": "string",
+                                  "description": "The exact VERBATIM supporting sentence from THAT source"},
+                    }, "required": ["id", "quote"]},
+                    "description": "Per cited source, the exact supporting passage (for verification).",
+                },
             },
             "required": ["answer", "used"],
         }
@@ -259,9 +271,19 @@ class LibraryQA:
                 seen.add(key)
                 used.append(val)
 
+        quotes = []
+        for qd in (out.get("quotes") or []):
+            if not isinstance(qd, dict):
+                continue
+            key = str(qd.get("id", "")).strip()
+            qt = (qd.get("quote") or "").strip()
+            if key and qt:
+                quotes.append({"id": id_by_str.get(key, key), "quote": qt})
+
         return {
             "answer": answer,
             "used": used,
+            "quotes": quotes,
             "n_docs": len(docs),
             "n_context_chunks": len(chunks),
         }

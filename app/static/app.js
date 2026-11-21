@@ -933,7 +933,15 @@ async function showTldr(id) {
     let html = r.tldr ? `<p style="font-size:15px;line-height:1.5">${esc(r.tldr)}</p>` : "";
     if (r.points && r.points.length) html += `<ul style="margin-top:10px;padding-left:18px;line-height:1.6">${r.points.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`;
     if (!html) html = `<p>${t("Özet üretilemedi.")}</p>`;
-    $("#tldrBody").innerHTML = html + `<p style="font-size:11px;color:#9aa6b2;margin-top:10px">${t("AI özeti — orijinali doğrula.")}</p><div class="modal-actions"><button class="primary" onclick="closeModal()">${t("Kapat")}</button></div>`;
+    const h = r.health || {};
+    let hbits = [];
+    if (h.kind === "retracted") hbits.push(`<b style="color:#be123c">${t("⚠ GERİ ÇEKİLMİŞ")}</b>`);
+    else if (h.kind === "concern") hbits.push(`<b style="color:#b45309">${t("⚠ Endişe ifadesi")}</b>`);
+    else if (h.kind === "erratum") hbits.push(`<b style="color:#a16207">${t("Erratum")}</b>`);
+    else hbits.push(`<span>${t("Bütünlük bayrağı yok")}</span>`);
+    if (h.citations != null) hbits.push(`${t("Atıf")}: <b>${h.citations}</b>`);
+    const health = `<div class="rhealth"><span>${t("Referans sağlığı")}:</span>${hbits.join("")}</div>`;
+    $("#tldrBody").innerHTML = html + health + `<p style="font-size:11px;color:#9aa6b2;margin-top:10px">${t("AI özeti — orijinali doğrula.")}</p><div class="modal-actions"><button class="primary" onclick="closeModal()">${t("Kapat")}</button></div>`;
   } catch (e) { $("#tldrBody").innerHTML = `<p style="color:#c0392b">${esc(e.message)}</p>`; }
 }
 // ---------------------------------------------------------- yönetim paneli (admin)
@@ -1324,8 +1332,10 @@ async function runAsk() {
     const r = await api("/api/library/ask", { method: "POST", body: JSON.stringify({ ...refScope(), question: q }) });
     if (r.error) throw new Error(r.error);
     let html = `<div class="ac-text" style="margin-top:12px">${esc(r.answer)}</div>`;
-    if (r.sources && r.sources.length) html += `<div style="margin-top:10px;font-size:12px;color:#6b7785"><b>${t("Kaynaklar:")}</b><br>` +
-      r.sources.map(s => `${esc(s.title)}${refLinks(s)}`).join("<br>") + `</div>`;
+    if (r.sources && r.sources.length) html += `<div style="margin-top:12px"><b style="font-size:13px">${t("📌 Doğrula — her kaynağın destekleyen pasajı:")}</b>` +
+      r.sources.map(s => `<div class="cand" style="display:block;margin-top:6px">
+        <div class="cand-title">${esc(s.title)}${refLinks(s)}</div>
+        ${s.quote ? `<div class="verify-quote">“${esc(s.quote)}”</div>` : ""}</div>`).join("") + `</div>`;
     else html += `<div style="margin-top:8px;font-size:12px;color:#8a97a8">${t("(Yanıtta kütüphane kaynağı kullanılmadı)")}</div>`;
     $("#askBody").innerHTML = html;
   } catch (e) { $("#askBody").innerHTML = `<p style="color:#c0392b">${esc(e.message)}</p>`; }

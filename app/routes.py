@@ -1,6 +1,7 @@
 """Refly HTTP uçları — kütüphane, import, formatlama, dedup, export."""
 from __future__ import annotations
 import io
+import json
 import threading
 import uuid
 from flask import Blueprint, render_template, request, jsonify, send_file, session
@@ -1105,6 +1106,25 @@ def api_tldr(rid):
     if _rate_limited(f"tldr:{_client_ip()}", 40, 3600):
         return jsonify({"error": "Çok fazla istek — biraz bekleyin."}), 429
     out = discover.Discover(Config.ANTHROPIC_API_KEY, Config.MODEL).tldr(r.get("title", ""), r.get("abstract", ""))
+    # #5 Referans sağlığı (DÜRÜST, gerçek sinyaller — uydurma 'duruş' yok):
+    #   geri çekilme/endişe durumu + atıf sayısı (etki).
+    integ = r.get("integrity")
+    kind = None
+    if isinstance(integ, dict):
+        kind = integ.get("kind")
+    elif isinstance(integ, str) and integ.strip():
+        try:
+            kind = (json.loads(integ) or {}).get("kind")
+        except Exception:
+            kind = None
+    health = {"kind": kind, "citations": None}
+    pmid = (r.get("pmid") or "").strip()
+    if pmid:
+        try:
+            health["citations"] = icite.metrics([pmid]).get(pmid, {}).get("citations")
+        except Exception:
+            pass
+    out["health"] = health
     return jsonify(out)
 
 
@@ -1176,8 +1196,10 @@ def api_library_ask():
     res = qa.ask(question, docs)
     quota.consume("autocite")
     by_id = {r["id"]: r for r in recs}
+    qmap = {q["id"]: q["quote"] for q in res.get("quotes", [])}
     sources = [{"id": i, "title": by_id.get(i, {}).get("title", ""),
-                "doi": by_id.get(i, {}).get("doi", ""), "pmid": by_id.get(i, {}).get("pmid", "")}
+                "doi": by_id.get(i, {}).get("doi", ""), "pmid": by_id.get(i, {}).get("pmid", ""),
+                "quote": qmap.get(i, "")}
                for i in res.get("used", []) if i in by_id]
     return jsonify({"answer": res.get("answer", ""), "sources": sources,
                     "n_docs": res.get("n_docs", 0)})
