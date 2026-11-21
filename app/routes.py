@@ -377,6 +377,35 @@ def api_detach(rid):
     return jsonify({"ok": True})
 
 
+@bp.post("/api/refs/<int:rid>/fetch-pdf")
+def api_fetch_pdf(rid):
+    """Açık-erişim tam-metin PDF'i (Unpaywall) bulup ekler. DOI gerektirir; giriş şart."""
+    r = db.get_ref(rid)
+    if not r:
+        return jsonify({"error": "bulunamadı"}), 404
+    if db.get_attachment(rid):
+        return jsonify({"error": "Bu kayıtta zaten PDF ekli."}), 400
+    doi = (r.get("doi") or "").strip()
+    if not doi:
+        return jsonify({"error": "DOI yok — açık-erişim araması DOI gerektirir."}), 422
+    from .auth import _rate_limited, _client_ip
+    if _rate_limited(f"oapdf:{_client_ip()}", 40, 3600):
+        return jsonify({"error": "Çok fazla istek — biraz bekleyin."}), 429
+    email = Config.CROSSREF_EMAIL or Config.NCBI_EMAIL
+    if not email:
+        return jsonify({"error": "Sunucuda e-posta (NCBI_EMAIL) ayarlı değil — Unpaywall gerektirir."}), 400
+    from .core import oa_pdf
+    url = oa_pdf.find_pdf_url(doi, email)
+    if not url:
+        return jsonify({"ok": False, "found": False})
+    data = oa_pdf.download(url)
+    if not data:
+        # Yayıncı sunucu-indirmeyi engelledi — kullanıcı tarayıcısından açsın (bot engeli yok).
+        return jsonify({"ok": True, "found": True, "downloaded": False, "url": url})
+    _save_pdf(rid, data)
+    return jsonify({"ok": True, "found": True, "downloaded": True})
+
+
 @bp.get("/api/refs/<int:rid>")
 def api_ref(rid):
     r = db.get_ref(rid)

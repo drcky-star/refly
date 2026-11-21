@@ -217,6 +217,7 @@ function renderRefs() {
         ${isIncomplete(r) ? `<button onclick="enrichOne(${r.id})" title="${t("Eksik alanları CrossRef/PubMed'den doldur")}">${t("🩹 Tamamla")}</button>` : ""}
         <button onclick="showRelated(${r.id})" title="${t("Benzer/ilgili makaleler öner")}">${t("🔗 İlgili")}</button>
         <button onclick="showSnowball(${r.id})" title="${t("Atıf ağı: kaynakça + atıf verenler")}">${t("🌐 Ağ")}</button>
+        ${r.doi && !r.has_attachment ? `<button onclick="fetchOaPdf(${r.id})" title="${t("Açık-erişim tam metni bul ve ekle (Unpaywall)")}">${t("📥 OA PDF")}</button>` : ""}
         <button onclick="showMetrics(${r.id})" title="${t("Dergi metrikleri (etki, h-index)")}">📊</button>
         <button onclick="copyOne(${r.id})">${t("Kopyala")}</button>
         <button onclick="openEdit(${r.id})">${t("Düzenle")}</button>
@@ -271,6 +272,15 @@ async function enrichAll() {
 }
 async function toggleStar(id) { await api(`/api/refs/${id}/star`, { method: "POST" }); loadRefs(); loadCollections(); }
 async function restoreRef(id) { await api(`/api/refs/${id}/restore`, { method: "POST" }); toast(t("Geri yüklendi ✓")); loadRefs(); loadCollections(); }
+async function fetchOaPdf(id) {
+  toast(t("Açık-erişim PDF aranıyor…"), 8000);
+  try {
+    const j = await api(`/api/refs/${id}/fetch-pdf`, { method: "POST" });
+    if (j.downloaded) { toast(t("PDF bulundu ve eklendi ✓")); loadRefs(); }
+    else if (j.url) { window.open(j.url, "_blank", "noopener"); toast(t("Ücretsiz tam metin açıldı (otomatik eklenemedi — yayıncı engeli).")); }
+    else toast(t("Ücretsiz tam metin bulunamadı."));
+  } catch (e) { toast(e.message); }
+}
 
 async function removeRef(id) {
   if (!confirm(t("Bu kaynak silinsin mi? (Çöp kutusundan geri alınabilir)"))) return;

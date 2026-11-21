@@ -4,6 +4,13 @@
 
 const I18N = {
   en: {
+    "Ücretsiz tam metin açıldı (otomatik eklenemedi — yayıncı engeli).": "Opened the free full text (couldn't auto-attach — publisher block).",
+    "📥 OA PDF": "📥 OA PDF",
+    "Açık-erişim tam metni bul ve ekle (Unpaywall)": "Find & attach the open-access full text (Unpaywall)",
+    "Açık-erişim PDF aranıyor…": "Searching for open-access PDF…",
+    "PDF bulundu ve eklendi ✓": "PDF found and attached ✓",
+    "PDF bulundu ama indirilemedi (yayıncı engeli).": "PDF found but could not be downloaded (publisher block).",
+    "Ücretsiz tam metin bulunamadı.": "No free full text found.",
     "Atıf ağı taranıyor…": "Scanning citation network…",
     "Atıf ağı: kaynakça + atıf verenler": "Citation network: references + citing papers",
     "Desteklemiyor": "Refutes",
@@ -420,6 +427,13 @@ const I18N = {
   },
 
   fr: {
+    "Ücretsiz tam metin açıldı (otomatik eklenemedi — yayıncı engeli).": "Texte intégral gratuit ouvert (impossible de joindre automatiquement — blocage de l'éditeur).",
+    "📥 OA PDF": "📥 PDF libre",
+    "Açık-erişim tam metni bul ve ekle (Unpaywall)": "Trouver et joindre le texte intégral en libre accès (Unpaywall)",
+    "Açık-erişim PDF aranıyor…": "Recherche du PDF en libre accès…",
+    "PDF bulundu ve eklendi ✓": "PDF trouvé et joint ✓",
+    "PDF bulundu ama indirilemedi (yayıncı engeli).": "PDF trouvé mais non téléchargeable (blocage de l'éditeur).",
+    "Ücretsiz tam metin bulunamadı.": "Aucun texte intégral gratuit trouvé.",
     "Atıf ağı taranıyor…": "Analyse du réseau de citations…",
     "Atıf ağı: kaynakça + atıf verenler": "Réseau de citations : références + articles citants",
     "Desteklemiyor": "Réfute",
@@ -818,6 +832,13 @@ const I18N = {
   },
 
   de: {
+    "Ücretsiz tam metin açıldı (otomatik eklenemedi — yayıncı engeli).": "Kostenloser Volltext geöffnet (automatisches Anhängen nicht möglich — Verlagssperre).",
+    "📥 OA PDF": "📥 OA-PDF",
+    "Açık-erişim tam metni bul ve ekle (Unpaywall)": "Open-Access-Volltext finden & anhängen (Unpaywall)",
+    "Açık-erişim PDF aranıyor…": "Open-Access-PDF wird gesucht…",
+    "PDF bulundu ve eklendi ✓": "PDF gefunden und angehängt ✓",
+    "PDF bulundu ama indirilemedi (yayıncı engeli).": "PDF gefunden, aber nicht herunterladbar (Verlagssperre).",
+    "Ücretsiz tam metin bulunamadı.": "Kein kostenloser Volltext gefunden.",
     "Atıf ağı taranıyor…": "Zitationsnetzwerk wird durchsucht…",
     "Atıf ağı: kaynakça + atıf verenler": "Zitationsnetzwerk: Referenzen + zitierende Artikel",
     "Desteklemiyor": "Widerlegt",
@@ -1216,6 +1237,13 @@ const I18N = {
   },
 
   ar: {
+    "Ücretsiz tam metin açıldı (otomatik eklenemedi — yayıncı engeli).": "تم فتح النص الكامل المجاني (تعذّر الإرفاق التلقائي — حظر الناشر).",
+    "📥 OA PDF": "📥 PDF مفتوح",
+    "Açık-erişim tam metni bul ve ekle (Unpaywall)": "ابحث عن النص الكامل المفتوح وأرفقه (Unpaywall)",
+    "Açık-erişim PDF aranıyor…": "جارٍ البحث عن PDF مفتوح الوصول…",
+    "PDF bulundu ve eklendi ✓": "تم العثور على PDF وإرفاقه ✓",
+    "PDF bulundu ama indirilemedi (yayıncı engeli).": "تم العثور على PDF لكن تعذّر تنزيله (حظر الناشر).",
+    "Ücretsiz tam metin bulunamadı.": "لم يُعثر على نص كامل مجاني.",
     "Atıf ağı taranıyor…": "جارٍ فحص شبكة الاستشهادات…",
     "Atıf ağı: kaynakça + atıf verenler": "شبكة الاستشهادات: المراجع + المقالات المستشهِدة",
     "Desteklemiyor": "لا يدعم",
