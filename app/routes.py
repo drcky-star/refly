@@ -38,7 +38,8 @@ def index():
     return render_template("index.html", csl_ok=csl.available(),
                            user_csl=Config.USER_CSL_DIR or "",
                            auth_on=Config.REFLY_AUTH,
-                           uname=session.get("uname", ""))
+                           uname=session.get("uname", ""),
+                           admin=_is_admin())
 
 
 # ----------------------------------------------------------- Word eklentisi
@@ -1090,6 +1091,29 @@ def api_journal_suggest():
         return jsonify({"error": "Başlık ya da özet gerekli"}), 400
     journals = discover.Discover(Config.ANTHROPIC_API_KEY, Config.MODEL).suggest_journals(title, abstract)
     return jsonify({"journals": journals})
+
+
+@bp.post("/api/refs/<int:rid>/tldr")
+def api_tldr(rid):
+    """Bir makale için AI TL;DR + anahtar noktalar. Giriş şart; IP 40/saat."""
+    if not Config.ANTHROPIC_API_KEY:
+        return jsonify({"error": "ANTHROPIC_API_KEY gerekli"}), 400
+    r = db.get_ref(rid)
+    if not r:
+        return jsonify({"error": "bulunamadı"}), 404
+    from .auth import _rate_limited, _client_ip
+    if _rate_limited(f"tldr:{_client_ip()}", 40, 3600):
+        return jsonify({"error": "Çok fazla istek — biraz bekleyin."}), 429
+    out = discover.Discover(Config.ANTHROPIC_API_KEY, Config.MODEL).tldr(r.get("title", ""), r.get("abstract", ""))
+    return jsonify(out)
+
+
+@bp.get("/api/admin/overview")
+def api_admin_overview():
+    """Sistem geneli yönetim özeti — SADECE admin (REFLY_ADMIN_EMAILS)."""
+    if not _is_admin():
+        return jsonify({"error": "yetkisiz"}), 403
+    return jsonify(db.admin_overview())
 
 
 # --------------------------------------------------- Kütüphanene Sor (Ask-your-library)

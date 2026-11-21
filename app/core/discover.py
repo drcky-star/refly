@@ -64,6 +64,24 @@ class Discover:
                 ranked.append({"id": i, "score": item.get("score"), "reason": (item.get("reason") or "").strip()})
         return ranked[:top]
 
+    def tldr(self, title: str, abstract: str) -> dict:
+        """Bir makalenin özetinden 1 cümlelik TL;DR + 3-4 anahtar nokta (sadık, uydurmasız)."""
+        if not (abstract or title).strip():
+            return {"tldr": "", "points": []}
+        system = (
+            "You are a biomedical research assistant. From the paper's title and abstract, produce a "
+            "faithful TL;DR: one plain-language sentence capturing the main point, plus 3-4 short key "
+            "takeaways (method/population, main finding, and any limitation if stated). Use ONLY what "
+            "the abstract states; do NOT add facts, numbers or claims that are not there. If the "
+            "abstract is missing, base it on the title and say so briefly."
+        )
+        user = f"TITLE: {title}\n\nABSTRACT: {abstract[:3000] or '(no abstract — use title)'}"
+        schema = {"type": "object", "properties": {"tldr": {"type": "string"},
+                  "points": {"type": "array", "items": {"type": "string"}}}, "required": ["tldr", "points"]}
+        out = self._tool(system, user, schema, "summarize", max_tokens=600)
+        return {"tldr": (out.get("tldr") or "").strip(),
+                "points": [p.strip() for p in (out.get("points") or []) if p and p.strip()][:5]}
+
     def suggest_journals(self, title: str, abstract: str) -> list[dict]:
         """Başlık+özetten uygun hedef dergileri önerir (kapsam + uygunluk)."""
         system = (

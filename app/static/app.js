@@ -219,6 +219,7 @@ function renderRefs() {
         <button onclick="showSnowball(${r.id})" title="${t("Atıf ağı: kaynakça + atıf verenler")}">${t("🌐 Ağ")}</button>
         ${r.doi && !r.has_attachment ? `<button onclick="fetchOaPdf(${r.id})" title="${t("Açık-erişim tam metni bul ve ekle (Unpaywall)")}">${t("📥 OA PDF")}</button>` : ""}
         <button onclick="showMetrics(${r.id})" title="${t("Dergi metrikleri (etki, h-index)")}">📊</button>
+        <button onclick="showTldr(${r.id})" title="${t("AI özeti (TL;DR)")}">📝</button>
         <button onclick="copyOne(${r.id})">${t("Kopyala")}</button>
         <button onclick="openEdit(${r.id})">${t("Düzenle")}</button>
         <button onclick="removeRef(${r.id})">${t("Sil")}</button>
@@ -923,6 +924,37 @@ async function runJournalFinder() {
         ${j.fit ? `<div style="font-size:13px;margin-top:2px">${esc(j.fit)}</div>` : ""}
         ${j.scope ? `<div class="cand-meta">${esc(j.scope)}</div>` : ""}</div>`).join("");
   } catch (e) { $("#jrnBody").innerHTML = `<p style="color:#c0392b;margin-top:12px">${esc(e.message)}</p>`; }
+}
+// ---------------------------------------------------------- AI özeti (TL;DR)
+async function showTldr(id) {
+  showModal(`<h2>${t("📝 AI özeti")}</h2><div id="tldrBody"><span class="spin"></span> ${t("Özetleniyor…")}</div>`);
+  try {
+    const r = await api(`/api/refs/${id}/tldr`, { method: "POST" });
+    let html = r.tldr ? `<p style="font-size:15px;line-height:1.5">${esc(r.tldr)}</p>` : "";
+    if (r.points && r.points.length) html += `<ul style="margin-top:10px;padding-left:18px;line-height:1.6">${r.points.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`;
+    if (!html) html = `<p>${t("Özet üretilemedi.")}</p>`;
+    $("#tldrBody").innerHTML = html + `<p style="font-size:11px;color:#9aa6b2;margin-top:10px">${t("AI özeti — orijinali doğrula.")}</p><div class="modal-actions"><button class="primary" onclick="closeModal()">${t("Kapat")}</button></div>`;
+  } catch (e) { $("#tldrBody").innerHTML = `<p style="color:#c0392b">${esc(e.message)}</p>`; }
+}
+// ---------------------------------------------------------- yönetim paneli (admin)
+async function openAdmin() {
+  showModal(`<h2>${t("🛠 Yönetim paneli")}</h2><div id="admBody"><span class="spin"></span></div>`, true);
+  try {
+    const s = await api("/api/admin/overview");
+    const plans = Object.entries(s.plans || {}).map(([k, v]) => `${esc(k)}: <b>${v}</b>`).join(" · ") || "—";
+    const usage = Object.entries(s.usage_this_month || {}).map(([k, v]) => `${esc(k)}: <b>${v}</b>`).join(" · ") || "—";
+    $("#admBody").innerHTML = `
+      <div class="stat-grid">
+        <div class="stat-card"><div class="num">${s.users}</div><div class="lbl">${t("Toplam kullanıcı")}</div></div>
+        <div class="stat-card"><div class="num">${s.new7}</div><div class="lbl">${t("Son 7 gün")}</div></div>
+        <div class="stat-card"><div class="num">${s.new30}</div><div class="lbl">${t("Son 30 gün")}</div></div>
+        <div class="stat-card"><div class="num">${s.total_refs}</div><div class="lbl">${t("Toplam kaynak")}</div></div>
+      </div>
+      <p style="margin-top:12px"><b>${t("Planlar")}:</b> ${plans} &nbsp;·&nbsp; ${t("Doğrulanmış")}: <b>${s.verified}</b></p>
+      <p style="margin-top:4px"><b>${t("Bu ay AI kullanımı")} (${esc(s.period)}):</b> ${usage}</p>
+      <p style="font-size:11.5px;color:#8a97a8;margin-top:10px">${t("AI kullanım sayıları maliyetin ana göstergesidir; ücretli planlar bunları kullanıcı başına sınırlar.")}</p>
+      <div class="modal-actions"><button class="primary" onclick="closeModal()">${t("Kapat")}</button></div>`;
+  } catch (e) { $("#admBody").innerHTML = `<p style="color:#c0392b">${esc(e.message)}</p>`; }
 }
 
 // ---------------------------------------------------------- otomatik etiketleme

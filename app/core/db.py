@@ -534,6 +534,27 @@ def count_users() -> int:
         return c.execute("SELECT COUNT(*) FROM users").fetchone()[0]
 
 
+def admin_overview() -> dict:
+    """Yönetim paneli için sistem geneli özet (sadece admin çağırır)."""
+    now = dt.datetime.now()
+    c7 = (now - dt.timedelta(days=7)).isoformat(timespec="seconds")
+    c30 = (now - dt.timedelta(days=30)).isoformat(timespec="seconds")
+    period = now.strftime("%Y-%m")
+    with _conn() as c:
+        total = c.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        verified = c.execute("SELECT COUNT(*) FROM users WHERE verified=1").fetchone()[0]
+        plans = {(r["plan"] or "free"): r["n"]
+                 for r in c.execute("SELECT plan, COUNT(*) n FROM users GROUP BY plan")}
+        new7 = c.execute("SELECT COUNT(*) FROM users WHERE created_at >= ?", (c7,)).fetchone()[0]
+        new30 = c.execute("SELECT COUNT(*) FROM users WHERE created_at >= ?", (c30,)).fetchone()[0]
+        usage = {r["metric"]: (r["n"] or 0)
+                 for r in c.execute("SELECT metric, SUM(count) n FROM usage WHERE period=? GROUP BY metric",
+                                    (period,))}
+        total_refs = c.execute("SELECT COUNT(*) FROM refs WHERE deleted_at IS NULL").fetchone()[0]
+    return {"users": total, "verified": verified, "plans": plans, "new7": new7, "new30": new30,
+            "usage_this_month": usage, "total_refs": total_refs, "period": period}
+
+
 # Kayıtlı kullanıcı sayacı — 60 sn önbellek (her sayfa yüklemesinde tam sorgu atma).
 # Yeni kayıt olunca create_user() önbelleği düşürür → sayı anında artar.
 _uc_cache = {"n": None, "ts": 0.0}
