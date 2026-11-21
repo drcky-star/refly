@@ -10,7 +10,7 @@ from .core import (db, pubmed, crossref, references as ref, csl, docx_export,
                    integrity, pdf_import, manuscript, autocite, enrich, icite, tagger,
                    backup, quota, mailer, sources, audit, synthesis, library_qa, metrics,
                    alerts, billing, rephrase, disclosure, semantic_scholar as sources_ss,
-                   evidence, compare)
+                   evidence, compare, discover)
 
 bp = Blueprint("refly", __name__)
 
@@ -1046,6 +1046,50 @@ def api_compare():
         return jsonify({"error": "Kaynak seçilmedi"}), 400
     res = compare.Comparator(Config.ANTHROPIC_API_KEY, Config.MODEL).run(recs)
     return jsonify(res)
+
+
+@bp.post("/api/library/semantic-search")
+def api_semantic_search():
+    """Anlamsal (AI) kütüphane araması — doğal-dil sorguya göre kendi kayıtlarını sıralar.
+    Giriş şart; IP 30/saat; token için en çok 120 kayıt."""
+    if not Config.ANTHROPIC_API_KEY:
+        return jsonify({"error": "ANTHROPIC_API_KEY gerekli"}), 400
+    from .auth import _rate_limited, _client_ip
+    if _rate_limited(f"sem:{_client_ip()}", 30, 3600):
+        return jsonify({"error": "Çok fazla istek — biraz bekleyin."}), 429
+    q = ((request.json or {}).get("query") or "").strip()
+    if not q:
+        return jsonify({"error": "Sorgu gerekli"}), 400
+    allrefs = db.list_refs("all")[:120]
+    lite = [{"id": r["id"], "title": r.get("title", ""), "abstract": r.get("abstract", "")} for r in allrefs]
+    ranked = discover.Discover(Config.ANTHROPIC_API_KEY, Config.MODEL).semantic_rank(q, lite)
+    by_id = {r["id"]: r for r in allrefs}
+    results = []
+    for item in ranked:
+        r = by_id.get(item["id"])
+        if r:
+            results.append({"id": r["id"], "title": r.get("title", ""), "authors": r.get("authors", []),
+                            "year": r.get("year", ""), "journal": r.get("journal") or r.get("iso", ""),
+                            "doi": r.get("doi", ""), "pmid": r.get("pmid", ""),
+                            "score": item.get("score"), "reason": item.get("reason", "")})
+    return jsonify({"results": results, "scanned": len(allrefs)})
+
+
+@bp.post("/api/journal-suggest")
+def api_journal_suggest():
+    """Başlık+özetten uygun hedef dergi önerir. Giriş şart; IP 20/saat."""
+    if not Config.ANTHROPIC_API_KEY:
+        return jsonify({"error": "ANTHROPIC_API_KEY gerekli"}), 400
+    from .auth import _rate_limited, _client_ip
+    if _rate_limited(f"jrn:{_client_ip()}", 20, 3600):
+        return jsonify({"error": "Çok fazla istek — biraz bekleyin."}), 429
+    d = request.json or {}
+    title = (d.get("title") or "").strip()[:400]
+    abstract = (d.get("abstract") or "").strip()
+    if not (title or abstract):
+        return jsonify({"error": "Başlık ya da özet gerekli"}), 400
+    journals = discover.Discover(Config.ANTHROPIC_API_KEY, Config.MODEL).suggest_journals(title, abstract)
+    return jsonify({"journals": journals})
 
 
 # --------------------------------------------------- Kütüphanene Sor (Ask-your-library)

@@ -876,6 +876,54 @@ function exportCompareCsv() {
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "refly-comparison.csv"; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1500);
 }
+// ---------------------------------------------------------- anlamsal (AI) kütüphane araması
+function openSemanticSearch() {
+  showModal(`<h2>${t("🧠 Akıllı arama")}</h2>
+    <p style="color:#6b7785;font-size:13px">${t("Doğal dille yaz; Refly kütüphanendeki kayıtları ANLAMCA sıralar (kelime birebir geçmese de).")}</p>
+    <div class="field"><input id="semQ" placeholder="${t("ör. yaşlılarda bel ağrısı için egzersizin etkinliği")}" onkeydown="if(event.key==='Enter')runSemanticSearch()" autocomplete="off"></div>
+    <div style="display:flex;gap:10px"><span style="flex:1"></span>
+      <button onclick="closeModal()">${t("Kapat")}</button>
+      <button class="primary magic" onclick="runSemanticSearch()">${t("Ara")}</button></div>
+    <div id="semBody"></div>`, true);
+}
+async function runSemanticSearch() {
+  const q = $("#semQ").value.trim(); if (!q) return toast(t("Sorgu yaz"));
+  $("#semBody").innerHTML = `<div class="ac-prog-label" style="margin-top:12px"><span class="spin"></span> ${t("Kütüphane sıralanıyor…")}</div>`;
+  try {
+    const r = await api("/api/library/semantic-search", { method: "POST", body: JSON.stringify({ query: q }) });
+    if (!r.results || !r.results.length) { $("#semBody").innerHTML = `<p style="margin-top:12px">${t("İlgili kayıt bulunamadı ({0} tarandı).", r.scanned || 0)}</p>`; return; }
+    $("#semBody").innerHTML = `<p style="font-size:12px;color:#8a97a8;margin:10px 0 6px">${t("{0} kayıt tarandı — en ilgili {1} tanesi:", r.scanned, r.results.length)}</p>` +
+      r.results.map(c => `<div class="cand" style="display:block">
+        <div class="cand-title" onclick="openEdit(${c.id})" style="cursor:pointer">${esc(c.title)}</div>
+        <div class="cand-meta">${esc((c.authors || [])[0] || "")} · ${esc(c.journal)} · ${esc(c.year)}${refLinks(c)}</div>
+        ${c.reason ? `<div style="font-size:12.5px;margin-top:3px;color:#6b7785">${esc(c.reason)}</div>` : ""}</div>`).join("");
+  } catch (e) { $("#semBody").innerHTML = `<p style="color:#c0392b;margin-top:12px">${esc(e.message)}</p>`; }
+}
+// ---------------------------------------------------------- dergi bul (journal finder)
+function openJournalFinder() {
+  showModal(`<h2>${t("📰 Dergi bul")}</h2>
+    <p style="color:#6b7785;font-size:13px">${t("Makalenin başlığını ve özetini yapıştır; Refly uygun hedef dergileri önerir.")}</p>
+    <div class="field"><input id="jrnTitle" placeholder="${t("Makale başlığı")}" autocomplete="off"></div>
+    <div class="field"><textarea id="jrnAbs" placeholder="${t("Özet (abstract)…")}" style="min-height:120px"></textarea></div>
+    <div style="display:flex;gap:10px"><span style="flex:1"></span>
+      <button onclick="closeModal()">${t("Kapat")}</button>
+      <button class="primary magic" onclick="runJournalFinder()">${t("Dergi öner")}</button></div>
+    <div id="jrnBody"></div>`, true);
+}
+async function runJournalFinder() {
+  const title = $("#jrnTitle").value.trim(), abstract = $("#jrnAbs").value.trim();
+  if (!title && !abstract) return toast(t("Başlık ya da özet gir"));
+  $("#jrnBody").innerHTML = `<div class="ac-prog-label" style="margin-top:12px"><span class="spin"></span> ${t("Dergiler öneriliyor…")}</div>`;
+  try {
+    const r = await api("/api/journal-suggest", { method: "POST", body: JSON.stringify({ title, abstract }) });
+    if (!r.journals || !r.journals.length) { $("#jrnBody").innerHTML = `<p style="margin-top:12px">${t("Öneri üretilemedi.")}</p>`; return; }
+    $("#jrnBody").innerHTML = `<p style="font-size:11.5px;color:#8a97a8;margin:10px 0 6px">${t("Not: öneriler AI tahminidir — kapsamı derginin sitesinden doğrula.")}</p>` +
+      r.journals.map(j => `<div class="cand" style="display:block">
+        <div class="cand-title">${esc(j.name)}</div>
+        ${j.fit ? `<div style="font-size:13px;margin-top:2px">${esc(j.fit)}</div>` : ""}
+        ${j.scope ? `<div class="cand-meta">${esc(j.scope)}</div>` : ""}</div>`).join("");
+  } catch (e) { $("#jrnBody").innerHTML = `<p style="color:#c0392b;margin-top:12px">${esc(e.message)}</p>`; }
+}
 
 // ---------------------------------------------------------- otomatik etiketleme
 async function autotagAll() {
