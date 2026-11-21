@@ -10,7 +10,7 @@ from .core import (db, pubmed, crossref, references as ref, csl, docx_export,
                    integrity, pdf_import, manuscript, autocite, enrich, icite, tagger,
                    backup, quota, mailer, sources, audit, synthesis, library_qa, metrics,
                    alerts, billing, rephrase, disclosure, semantic_scholar as sources_ss,
-                   evidence, compare, discover)
+                   evidence, compare, discover, deepsearch)
 
 bp = Blueprint("refly", __name__)
 
@@ -1114,6 +1114,26 @@ def api_admin_overview():
     if not _is_admin():
         return jsonify({"error": "yetkisiz"}), 403
     return jsonify(db.admin_overview())
+
+
+@bp.post("/api/deep-search")
+def api_deep_search():
+    """Yinelemeli (çok turlu) literatür araması + dürüst kapsama tahmini. Giriş şart; IP 10/saat
+    (ağır: çok aramalı + Claude). Kütüphanede olanlar işaretlenir."""
+    if not Config.ANTHROPIC_API_KEY:
+        return jsonify({"error": "ANTHROPIC_API_KEY gerekli"}), 400
+    from .auth import _rate_limited, _client_ip
+    if _rate_limited(f"deep:{_client_ip()}", 10, 3600):
+        return jsonify({"error": "Çok fazla istek — biraz bekleyin."}), 429
+    q = ((request.json or {}).get("query") or "").strip()
+    if not q:
+        return jsonify({"error": "Sorgu gerekli"}), 400
+    ms = sources.MultiSource(_pm(), Config.CROSSREF_EMAIL)
+    res = deepsearch.DeepSearch(ms, Config.ANTHROPIC_API_KEY, Config.MODEL).run(q)
+    existing = db.existing_keys()
+    for r in res["results"]:
+        r["in_library"] = bool(_rec_keys(r) & existing)
+    return jsonify(res)
 
 
 # --------------------------------------------------- Kütüphanene Sor (Ask-your-library)

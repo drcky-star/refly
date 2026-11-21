@@ -4,6 +4,15 @@
 
 const I18N = {
   en: {
+    "🔭 Derin arama": "🔭 Deep search",
+    "Çok turlu arama: her tur yeni açılar üretir, tek aramadan çok daha fazlasını bulur; sonunda dürüst bir kapsama tahmini verir. ~30 sn sürebilir.": "Multi-round search: each round generates new angles, finding far more than a single search; ends with an honest coverage estimate. May take ~30s.",
+    "Araştırma sorusu / konu": "Research question / topic",
+    "Derin ara": "Deep search",
+    "Derin arama sürüyor (çok tur)… ~30 sn": "Deep search running (multiple rounds)… ~30s",
+    "Tahmini kapsama": "Estimated coverage",
+    "Kaçırılmış olabilir": "May be missing",
+    "{0} turda {1} benzersiz makale bulundu.": "Found {1} unique papers in {0} rounds.",
+    "kütüphanede": "in library",
     "🛠 Yönetim": "🛠 Admin",
     "AI özeti (TL;DR)": "AI summary (TL;DR)",
     "📝 AI özeti": "📝 AI summary",
@@ -458,6 +467,15 @@ const I18N = {
   },
 
   fr: {
+    "🔭 Derin arama": "🔭 Recherche approfondie",
+    "Çok turlu arama: her tur yeni açılar üretir, tek aramadan çok daha fazlasını bulur; sonunda dürüst bir kapsama tahmini verir. ~30 sn sürebilir.": "Recherche multi-tours : chaque tour génère de nouveaux angles, trouvant bien plus qu'une seule recherche ; se termine par une estimation honnête de la couverture. Peut prendre ~30 s.",
+    "Araştırma sorusu / konu": "Question / sujet de recherche",
+    "Derin ara": "Rechercher en profondeur",
+    "Derin arama sürüyor (çok tur)… ~30 sn": "Recherche approfondie en cours (plusieurs tours)… ~30 s",
+    "Tahmini kapsama": "Couverture estimée",
+    "Kaçırılmış olabilir": "Peut manquer",
+    "{0} turda {1} benzersiz makale bulundu.": "{1} articles uniques trouvés en {0} tours.",
+    "kütüphanede": "dans la bibliothèque",
     "🛠 Yönetim": "🛠 Admin",
     "AI özeti (TL;DR)": "Résumé IA (TL;DR)",
     "📝 AI özeti": "📝 Résumé IA",
@@ -894,6 +912,15 @@ const I18N = {
   },
 
   de: {
+    "🔭 Derin arama": "🔭 Tiefensuche",
+    "Çok turlu arama: her tur yeni açılar üretir, tek aramadan çok daha fazlasını bulur; sonunda dürüst bir kapsama tahmini verir. ~30 sn sürebilir.": "Mehrrunden-Suche: Jede Runde erzeugt neue Ansätze und findet weit mehr als eine einzelne Suche; endet mit einer ehrlichen Abdeckungsschätzung. Kann ~30 s dauern.",
+    "Araştırma sorusu / konu": "Forschungsfrage / Thema",
+    "Derin ara": "Tief suchen",
+    "Derin arama sürüyor (çok tur)… ~30 sn": "Tiefensuche läuft (mehrere Runden)… ~30 s",
+    "Tahmini kapsama": "Geschätzte Abdeckung",
+    "Kaçırılmış olabilir": "Möglicherweise fehlend",
+    "{0} turda {1} benzersiz makale bulundu.": "{1} eindeutige Artikel in {0} Runden gefunden.",
+    "kütüphanede": "in Bibliothek",
     "🛠 Yönetim": "🛠 Admin",
     "AI özeti (TL;DR)": "KI-Zusammenfassung (TL;DR)",
     "📝 AI özeti": "📝 KI-Zusammenfassung",
@@ -1330,6 +1357,15 @@ const I18N = {
   },
 
   ar: {
+    "🔭 Derin arama": "🔭 بحث عميق",
+    "Çok turlu arama: her tur yeni açılar üretir, tek aramadan çok daha fazlasını bulur; sonunda dürüst bir kapsama tahmini verir. ~30 sn sürebilir.": "بحث متعدد الجولات: كل جولة تولّد زوايا جديدة وتجد أكثر بكثير من بحث واحد؛ وينتهي بتقدير صادق للتغطية. قد يستغرق ~30 ثانية.",
+    "Araştırma sorusu / konu": "سؤال / موضوع البحث",
+    "Derin ara": "ابحث بعمق",
+    "Derin arama sürüyor (çok tur)… ~30 sn": "البحث العميق جارٍ (عدة جولات)… ~30 ثانية",
+    "Tahmini kapsama": "التغطية المقدّرة",
+    "Kaçırılmış olabilir": "قد يكون ناقصًا",
+    "{0} turda {1} benzersiz makale bulundu.": "تم العثور على {1} مقالة فريدة في {0} جولات.",
+    "kütüphanede": "في المكتبة",
     "🛠 Yönetim": "🛠 الإدارة",
     "AI özeti (TL;DR)": "ملخّص الذكاء الاصطناعي (TL;DR)",
     "📝 AI özeti": "📝 ملخّص الذكاء الاصطناعي",

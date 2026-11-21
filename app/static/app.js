@@ -956,6 +956,43 @@ async function openAdmin() {
       <div class="modal-actions"><button class="primary" onclick="closeModal()">${t("Kapat")}</button></div>`;
   } catch (e) { $("#admBody").innerHTML = `<p style="color:#c0392b">${esc(e.message)}</p>`; }
 }
+// ---------------------------------------------------------- derin arama (iterative deep search)
+let _deepResults = [];
+function openDeepSearch() {
+  showModal(`<h2>${t("🔭 Derin arama")}</h2>
+    <p style="color:#6b7785;font-size:13px">${t("Çok turlu arama: her tur yeni açılar üretir, tek aramadan çok daha fazlasını bulur; sonunda dürüst bir kapsama tahmini verir. ~30 sn sürebilir.")}</p>
+    <div class="field"><input id="deepQ" placeholder="${t("Araştırma sorusu / konu")}" onkeydown="if(event.key==='Enter')runDeepSearch()" autocomplete="off"></div>
+    <div style="display:flex;gap:10px"><span style="flex:1"></span>
+      <button onclick="closeModal()">${t("Kapat")}</button>
+      <button class="primary magic" onclick="runDeepSearch()">${t("Derin ara")}</button></div>
+    <div id="deepBody"></div>`, true);
+}
+async function runDeepSearch() {
+  const q = $("#deepQ").value.trim(); if (!q) return toast(t("Soru yaz"));
+  $("#deepBody").innerHTML = `<div class="ac-prog-label" style="margin-top:12px"><span class="spin"></span> ${t("Derin arama sürüyor (çok tur)… ~30 sn")}</div>`;
+  try {
+    const r = await api("/api/deep-search", { method: "POST", body: JSON.stringify({ query: q }) });
+    _deepResults = r.results || [];
+    if (!_deepResults.length) { $("#deepBody").innerHTML = `<p style="margin-top:12px">${t("Sonuç bulunamadı.")}</p>`; return; }
+    const cov = (r.coverage != null) ? r.coverage : null;
+    const covBar = cov != null ? `<div style="margin:12px 0 2px"><div style="display:flex;justify-content:space-between;font-size:12.5px;color:#6b7785"><span>${t("Tahmini kapsama")}</span><b>${cov}%</b></div>
+      <div style="height:10px;background:#e9edf6;border-radius:6px;overflow:hidden;margin-top:3px"><div style="width:${cov}%;height:100%;background:var(--grad)"></div></div></div>` : "";
+    const note = r.note ? `<p style="font-size:12px;color:#8a97a8;margin:6px 0">${t("Kaçırılmış olabilir")}: ${esc(r.note)}</p>` : "";
+    const meta = `<p style="font-size:12px;color:#8a97a8;margin:8px 0 4px">${t("{0} turda {1} benzersiz makale bulundu.", r.rounds, _deepResults.length)}</p>`;
+    const list = _deepResults.map((c, i) => `<div class="cand">${c.in_library ? `<span class="badge" style="margin-top:2px">${t("kütüphanede")}</span>` : `<input type="checkbox" id="d${i}">`}
+      <div><div class="cand-title">${esc(c.title)}</div>
+      <div class="cand-meta">${esc((c.authors || []).slice(0, 3).join(", "))} · ${esc(c.journal)} · ${esc(c.year)}${refLinks(c)}</div></div></div>`).join("");
+    $("#deepBody").innerHTML = covBar + note + meta + list +
+      `<div class="modal-actions"><button onclick="closeModal()">${t("Kapat")}</button>
+       <button class="primary" onclick="addSelectedDeep()">${t("Seçilenleri ekle")}</button></div>`;
+  } catch (e) { $("#deepBody").innerHTML = `<p style="color:#c0392b;margin-top:12px">${esc(e.message)}</p>`; }
+}
+async function addSelectedDeep() {
+  const items = _deepResults.filter((c, i) => !c.in_library && $("#d" + i)?.checked);
+  if (!items.length) return toast(t("Seçim yok"));
+  const j = await api("/api/import/add", { method: "POST", body: JSON.stringify({ items, collection: collForImport() }) });
+  closeModal(); toast(importedMsg(j)); loadRefs(); loadCollections();
+}
 
 // ---------------------------------------------------------- otomatik etiketleme
 async function autotagAll() {
